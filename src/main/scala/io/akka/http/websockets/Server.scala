@@ -2,12 +2,13 @@ package io.akka.http.websockets
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.model.HttpMethods._
+import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.ws.{BinaryMessage, Message, TextMessage, UpgradeToWebsocket}
 import akka.stream.ActorMaterializer
-import io.akka.http.websockets.services.{EchoService, MainService}
+import akka.stream.scaladsl.{Flow, Sink, Source}
 
-import scala.io.StdIn
-
+// reference here: http://doc.akka.io/docs/akka/2.4.8/scala/http/routing-dsl/websocket-support.html#server-api
 object Server extends App {
 
   implicit val actorSystem = ActorSystem("akka-system")
@@ -15,19 +16,32 @@ object Server extends App {
 
   val config = actorSystem.settings.config
   val interface = config.getString("app.interface")
-
   val port = config.getInt("app.port")
 
-  val route = MainService.route ~
-    EchoService.route
+  val requestHandler: HttpRequest => HttpResponse = {
+    case req @ HttpRequest(GET, Uri.Path("/"), _, _, _) =>
+      req.header[UpgradeToWebsocket] match {
+        case Some(upgrade) => upgrade.handleMessages(communicationWebSocketService)
+        case None => HttpResponse(400, entity = "Not a valid websocket request!")
+      }
 
-  val binding = Http().bindAndHandle(route, interface, port)
+    case r: HttpRequest =>
+      //r.discardEntityBytes() // important to drain incoming HTTP Entity stream
+      HttpResponse(404, entity = "Unknown resource!")
+  }
+
+
+val binding = Http().bindAndHandleSync(requestHandler, interface, port)
   println(s"Server is now online at http://$interface:$port\nPress RETURN to stop...")
-  StdIn.readLine()
 
-  import actorSystem.dispatcher
+  val communicationWebSocketService =
+    Flow[Message]
+        .mapConcat {
+          case tm: TextMessage => TextMessage(Source.single("Hello ") ++ tm.textStream) :: Nil
+          case bm: BinaryMessage =>
+            bm.dataStream.runWith(Sink.ignore)
+            Nil
+        }
 
-  binding.flatMap(_.unbind()).onComplete(_ => actorSystem.shutdown())
-  println("Server is down...")
 
 }
