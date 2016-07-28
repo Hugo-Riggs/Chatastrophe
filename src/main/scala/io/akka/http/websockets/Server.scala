@@ -18,8 +18,19 @@ object Server extends App {
   val interface = config.getString("app.interface")
   val port = config.getInt("app.port")
 
+ // Does upgrade need to be defined here?
+ // requestHandler is always matching to None case
+  def upgrade(htpReq: HttpRequest) = {
+    try {
+      Some(HttpRequest)
+    } catch {
+      case e: Exception => None
+    }
+  }
+
   val requestHandler: HttpRequest => HttpResponse = {
     case req @ HttpRequest(GET, Uri.Path("/"), _, _, _) =>
+           println(req.headers)
       req.header[UpgradeToWebsocket] match {
         case Some(upgrade) => upgrade.handleMessages(communicationWebSocketService)
         case None => HttpResponse(400, entity = "Not a valid websocket request!")
