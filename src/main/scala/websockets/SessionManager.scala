@@ -6,7 +6,7 @@ object SessionManager {
   var sessions: Map[Int, session] = Map.empty[Int, session]
 
   def  findOrCreate(number: Int)(implicit actorSystem: ActorSystem): session =
-    sessions.getOrElse(number, createNewSession(number))
+      sessions.getOrElse(number, createNewSession(number))
 
   private def createNewSession(number: Int)(implicit actorSystem: ActorSystem):session = {
     val a_session = session(number)

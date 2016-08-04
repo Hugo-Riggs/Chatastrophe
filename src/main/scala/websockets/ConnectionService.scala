@@ -8,10 +8,20 @@ import akka.stream.Materializer
 object ConnectionService {
 
   def route(implicit actorSystem: ActorSystem, materializer: Materializer): Route =
-    pathPrefix("ws-chat" / IntNumber) { Id =>
-    parameter('name) { userName =>
-      handleWebSocketMessages(SessionManager.findOrCreate(Id).webSocketFlow(userName))
+    path("ws-chat"){
+        handleWebSocketMessages(SessionManager.findOrCreate(111).webSocketFlow("USERNAME"))
     }
-  }
+/*
+  def route(implicit actorSystem: ActorSystem, materializer: Materializer): Route =
+    pathPrefix("ws-chat" / IntNumber) {
+                  println("match Id")
+      Id =>
+              handleWebSocketMessages(SessionManager.findOrCreate(Id).webSocketFlow("USERNAME"))
+              */
+    //parameter('name) {
+      //userName =>
+      //handleWebSocketMessages(SessionManager.findOrCreate(Id).webSocketFlow(userName))
+    //}
+  //}
 
 }
