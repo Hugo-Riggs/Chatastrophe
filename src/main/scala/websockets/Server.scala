@@ -20,26 +20,35 @@ object Server {
   implicit val system = ActorSystem()
   implicit val materializer = ActorMaterializer()
 
-  var bindingFuture : scala.concurrent.Future[akka.http.scaladsl.Http.ServerBinding] = startServer
+  // Config is under src/main/resources
+  val config = system.settings.config
+  val interface = config.getString("app.interface")
+  val port = config.getInt("app.port")
 
-    def startServer = {
+  // Initially our HTTP server binding is null
+  var bindingFuture : scala.concurrent.Future[akka.http.scaladsl.Http.ServerBinding] = null
 
-      import ConnectionService._
+  // Server factory takes an argument and creates a singleton server object
+  def serverFactory(args : String) = {
 
-      bindingFuture =
-        Http().bindAndHandle(ConnectionService.route, interface = "localhost", port = 8080) //Http().bindAndHandleSync(requestHandler, interface = "localhost", port = 8080)
-      bindingFuture
-      //println(s"Server online at http://localhost:8080/\nPress RETURN to stop...")
-      //Console.readLine()
+    args.toLowerCase match {
+      case "start" if bindingFuture == null => {
+        import ConnectionService._
+        bindingFuture =
+          Http().bindAndHandle(ConnectionService.route, interface, port)
+    }
+      case "stop" => {
+          import system.dispatcher // for the future transformations
+          bindingFuture
+            .flatMap(_.unbind()) // trigger unbinding from the port
+            .onComplete(_ => system.terminate()) // and shutdown when done
+      }
+      case _ => {
+        println("The server has already been started.")
+      }
     }
 
-    def stopServer = {
-
-      import system.dispatcher // for the future transformations
-      bindingFuture
-        .flatMap(_.unbind()) // trigger unbinding from the port
-        .onComplete(_ => system.terminate()) // and shutdown when done
-    }
+  }
 
 
 

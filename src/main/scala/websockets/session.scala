@@ -13,6 +13,7 @@ class session(id: Int, actorSystem: ActorSystem){
   import akka.stream.impl._
   import akka.http.scaladsl.model._
   import akka.http.scaladsl.model.ws.Message
+  import akka.http.scaladsl.model.ws.TextMessage
 //  import akka.stream.scaladsl.FlowGraph.Implicits._ // depricated?
 
   import scala.concurrent.Future
@@ -25,10 +26,6 @@ class session(id: Int, actorSystem: ActorSystem){
   def webSocketFlow(user: String): Flow[Message, Message, _] =
     Flow[Message]
     .mapConcat {
-      // we match but don't actually consume the text message here,
-      // rather we simply stream it back as the tail of the response
-      // this means we might start sending the response even before the
-      // end of the incoming message has been received
       case tm: TextMessage => TextMessage(Source.single("Hello ") ++ tm.textStream) :: Nil
       case _: Any => Nil
     }

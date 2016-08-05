@@ -8,7 +8,7 @@ import akka.stream.Materializer
 object ConnectionService {
 
   def route(implicit actorSystem: ActorSystem, materializer: Materializer): Route =
-    path("ws-chat"){
+    pathEndOrSingleSlash {
         handleWebSocketMessages(SessionManager.findOrCreate(111).webSocketFlow("USERNAME"))
     }
 /*
