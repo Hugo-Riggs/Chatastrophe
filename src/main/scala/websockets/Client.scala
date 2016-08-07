@@ -21,7 +21,7 @@ package websockets
  */
 
 import akka.actor.ActorSystem
-import akka.Done
+import akka.{Done, NotUsed}
 import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
 import akka.stream.Materializer
@@ -44,31 +44,7 @@ class Client(name: String, address: String, port: Int, actorSystem: ActorSystem)
   val PARALLELISM = 3
 
 
-  /*def spam(message: String, numberOfTimes: Int = 1000) = {
-    import akka.actor.Props
-    import akka.actor.Actor
-    import scala.util.Random
-    val talkActor = actorSystem.actorOf(Props(new Actor {
-      import actorSystem.dispatcher
-      import scala.concurrent.duration._
-
-      var counter: Int = 0
-
-      override def receive: Receive = {
-        case message: String =>
-          counter = counter + 1
-          send(s"[$name] message #$counter")
-          if (counter < numberOfTimes)
-            actorSystem.scheduler.scheduleOnce(rand.seconds, self, message)
-      }
-
-      def rand: Int = 1 + Random.nextInt(9) //message every 1-10 seconds
-    }))
-    talkActor ! message
-  }*/
-
-
-  val incomingSink: Sink[Message, Future[Done]] =
+  def incomingSink: Sink[Message, Future[Done]] =
     Sink.foreach[Message] {
       case message: TextMessage.Strict =>
         println(message.text)
@@ -94,26 +70,56 @@ class Client(name: String, address: String, port: Int, actorSystem: ActorSystem)
 
 
   def clientInput = {
-    val message = readLine
-    TextMessage(name + ": " + message)
+    var message, line = ""
+    do {
+        line = readLine
+        message += line
+    }while(line != ".")
+     TextMessage(name + ": " + message)
   }
 
-
   // SOURCE AND SINK
-  val flow: Flow[Message, Message, Promise[Option[Message]]] =
+  def flow: Flow[Message, Message, Promise[Option[Message]]] =
     Flow.fromSinkAndSourceMat(
       incomingFlow.toMat(incomingSink)(Keep.both),
-      Source(List(clientInput))// List(TextMessage("one"), TextMessage("two"))
-        .concatMat(Source.maybe[Message])(Keep.right))(Keep.right)
+      Source(List(clientInput)).alsoTo(outgoingFlow).concatMat(Source.maybe[Message])(Keep.right)
+    )(Keep.right)
+
+
+  import akka.stream.Graph
+  def outgoingFlow: Graph[Message, NotUsed] = {
+    GraphDSL.create() { implicit b =>
+    import GraphDSL.Implicits._
+      val broadcast = b.add(Broadcast[Message](1))
+      Source.single("t") ~> broadcast.in
+      broadcast.out ~>
+      ClosedShape
+    }
+  }
+/*
+Graph[ClientGraphShape[In, Out], NotUsed] = {
+    GraphDSL.create() { implicit b =>
+      import GraphDSL.Implicits._
+      val priorityMerge = b.add(MergePreferred[In](1))
+      val balance = b.add(Balance[In](workerCount))
+      val resultsMerge = b.add(Merge[Out](workerCount))
+
+      priorityMerge ~> balance
+
+      for (i <- 0 until workerCount)
+        balance.out(i) ~> worker ~> resultsMerge.in(i)
+      GraphClientShape(
+        fromServerWebsocket= priorityMerge.in(0),
+        toServerWebsocket = resultsMerge.out)
+    }
+}
+*/
 
 
   val (upgradeResponse, promise) =
-    Http().singleWebSocketRequest(
-      WebSocketRequest("ws://"+address+":"+port+"/"),
-      flow)
+    Http().singleWebSocketRequest( WebSocketRequest("ws://"+address+":"+port+"/"), flow)
 
   promise.success(None)
-
 }
 
 object Client {

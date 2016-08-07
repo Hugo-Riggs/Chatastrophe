@@ -11,8 +11,8 @@ class SetSuite extends FunSuite {
   implicit val actorSystem = ActorSystem("akka-system")
   val client = Client("Junkrat", "localhost", 8080)
 
-  // Stop server after pressing enter
-  Console.readLine()
+  // Stop server after "quit" enter
+  var in = ""; do{ in=Console.readLine() }while(in != "quit")
   Server("stop"); println("Server stopped. . . ")
 
 }
