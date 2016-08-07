@@ -29,12 +29,12 @@ import akka.stream.scaladsl._
 import akka.http.scaladsl.model._
 import akka.stream.impl._
 import akka.http.scaladsl.model.ws._
-
+import scala.concurrent.Promise
 import scala.concurrent.duration._
 import scala.concurrent.Future
 
 // Client request on the IP/Port
-class Client {
+class Client(name: String, address: String, port: Int, actorSystem: ActorSystem) {
 
   implicit val system = ActorSystem()
   import system.dispatcher
@@ -42,6 +42,30 @@ class Client {
   val MAX_FRAMES = 100
   val TIMEOUT = 5 seconds
   val PARALLELISM = 3
+
+
+  /*def spam(message: String, numberOfTimes: Int = 1000) = {
+    import akka.actor.Props
+    import akka.actor.Actor
+    import scala.util.Random
+    val talkActor = actorSystem.actorOf(Props(new Actor {
+      import actorSystem.dispatcher
+      import scala.concurrent.duration._
+
+      var counter: Int = 0
+
+      override def receive: Receive = {
+        case message: String =>
+          counter = counter + 1
+          send(s"[$name] message #$counter")
+          if (counter < numberOfTimes)
+            actorSystem.scheduler.scheduleOnce(rand.seconds, self, message)
+      }
+
+      def rand: Int = 1 + Random.nextInt(9) //message every 1-10 seconds
+    }))
+    talkActor ! message
+  }*/
 
 
   val incomingSink: Sink[Message, Future[Done]] =
@@ -69,36 +93,31 @@ class Client {
     }
 
 
-  def connect(address: String, port: Int) = {
-    val outgoing = Source.single(TextMessage("D. VA"))
-    val webSocketFlow = Http().webSocketClientFlow(WebSocketRequest("ws://"+address+":"+port+"/"))
-
-
-    // the materialized value is a tuple with
-    // upgradeResponse is a Future[WebSocketUpgradeResponse] that
-    // completes or fails when the connection succeeds or fails
-    // and closed is a Future[Done] with the stream completion from the incomingSink sink
-    val (upgradeResponse, closed) =
-    outgoing
-      .viaMat(webSocketFlow)(Keep.right) // keep the materialized Future[WebSocketUpgradeResponse]
-      .via(incomingFlow)
-      .toMat(incomingSink)(Keep.both) // also keep the Future[Done]
-      .run()
-
-
-    // just like a regular http request we can access response status which is available via upgrade.response.status
-    // status code 101 (Switching Protocols) indicates that server support WebSockets
-    val connected = upgradeResponse.flatMap { upgrade =>
-      if (upgrade.response.status == StatusCodes.SwitchingProtocols) {
-        Future.successful(Done)
-      } else {
-        throw new RuntimeException(s"Connection failed: ${upgrade.response.status}")
-      }
-    }
-
-    // in a real application you would not side effect here
-    connected.onComplete(println)
-    closed.foreach(_ => println("closed"))
+  def clientInput = {
+    val message = readLine
+    TextMessage(name + ": " + message)
   }
 
+
+  // SOURCE AND SINK
+  val flow: Flow[Message, Message, Promise[Option[Message]]] =
+    Flow.fromSinkAndSourceMat(
+      incomingFlow.toMat(incomingSink)(Keep.both),
+      Source(List(clientInput))// List(TextMessage("one"), TextMessage("two"))
+        .concatMat(Source.maybe[Message])(Keep.right))(Keep.right)
+
+
+  val (upgradeResponse, promise) =
+    Http().singleWebSocketRequest(
+      WebSocketRequest("ws://"+address+":"+port+"/"),
+      flow)
+
+  promise.success(None)
+
+}
+
+object Client {
+  def apply(name: String, address: String, port: Int)(implicit actorSystem: ActorSystem): Client = {
+    new Client(name, address, port, actorSystem)
+  }
 }

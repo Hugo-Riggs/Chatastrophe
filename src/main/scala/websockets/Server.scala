@@ -29,7 +29,7 @@ object Server {
   var bindingFuture : scala.concurrent.Future[akka.http.scaladsl.Http.ServerBinding] = null
 
   // Server factory takes an argument and creates a singleton server object
-  def serverFactory(args : String) = {
+  def apply(args : String) = {
 
     args.toLowerCase match {
       case "start" if bindingFuture == null => {
@@ -43,14 +43,15 @@ object Server {
             .flatMap(_.unbind()) // trigger unbinding from the port
             .onComplete(_ => system.terminate()) // and shutdown when done
       }
-      case _ => {
-        println("The server has already been started.")
+      case _ if bindingFuture == null => {
+        println("Valid arguments are (start) and (stop).")
+      }
+      case _ if bindingFuture != null => {
+        println("Server already started")
       }
     }
 
   }
-
-
 
 }
 
