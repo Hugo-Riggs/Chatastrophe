@@ -1,5 +1,7 @@
 package websockets
 
+class Client{}
+/*
 /*
 * Class of a client side, websocket connection, for the chat service.
 * Does, import akka/scala dependencies
@@ -29,9 +31,16 @@ import akka.stream.scaladsl._
 import akka.http.scaladsl.model._
 import akka.stream.impl._
 import akka.http.scaladsl.model.ws._
-import scala.concurrent.Promise
+import scala.concurrent.{Promise, Future}
 import scala.concurrent.duration._
-import scala.concurrent.Future
+
+
+object Client {
+  def apply(name: String, address: String, port: Int)(implicit actorSystem: ActorSystem): Client = {
+    new Client(name, address, port, actorSystem)
+  }
+}
+
 
 // Client request on the IP/Port
 class Client(name: String, address: String, port: Int, actorSystem: ActorSystem) {
@@ -42,14 +51,14 @@ class Client(name: String, address: String, port: Int, actorSystem: ActorSystem)
   val MAX_FRAMES = 100
   val TIMEOUT = 5 seconds
   val PARALLELISM = 3
-
+  val overflowStrategy = akka.stream.OverflowStrategy.dropHead
 
   def incomingSink: Sink[Message, Future[Done]] =
     Sink.foreach[Message] {
       case message: TextMessage.Strict =>
         println(message.text)
       case any: Any =>
-        println("incomingSink Any = " + any)
+        println("incomingSink Any (unsupported) = " + any)
     }
 
 
@@ -69,61 +78,75 @@ class Client(name: String, address: String, port: Int, actorSystem: ActorSystem)
     }
 
 
-  def clientInput = {
-    var message, line = ""
-    do {
-        line = readLine
-        message += line
-    }while(line != ".")
-     TextMessage(name + ": " + message)
+///////////////////////////////
+/*
+* The challenge in between these forward slashes,
+* is to create a source flow for sending messages
+* to server.
+*
+* Previously and through examples it just sends 1 pre-programmed message.
+*
+ */
+
+  /*def clientInput = {
+    TextMessage(name + ": joined session")
   }
+
+  val helloSource: Source[Message, NotUsed] =
+    Source.single(TextMessage("hello world!"))
 
   // SOURCE AND SINK
   def flow: Flow[Message, Message, Promise[Option[Message]]] =
     Flow.fromSinkAndSourceMat(
-      incomingFlow.toMat(incomingSink)(Keep.both),
-      Source(List(clientInput)).alsoTo(outgoingFlow).concatMat(Source.maybe[Message])(Keep.right)
+      incomingFlow.toMat(incomingSink)(Keep.both),    // SINK
+      Source(List(clientInput)).concatMat(Source.maybe[Message])(Keep.right)   //   SOURCE
     )(Keep.right)
-
-
-  import akka.stream.Graph
-  def outgoingFlow: Graph[Message, NotUsed] = {
-    GraphDSL.create() { implicit b =>
-    import GraphDSL.Implicits._
-      val broadcast = b.add(Broadcast[Message](1))
-      Source.single("t") ~> broadcast.in
-      broadcast.out ~>
-      ClosedShape
-    }
-  }
-/*
-Graph[ClientGraphShape[In, Out], NotUsed] = {
-    GraphDSL.create() { implicit b =>
-      import GraphDSL.Implicits._
-      val priorityMerge = b.add(MergePreferred[In](1))
-      val balance = b.add(Balance[In](workerCount))
-      val resultsMerge = b.add(Merge[Out](workerCount))
-
-      priorityMerge ~> balance
-
-      for (i <- 0 until workerCount)
-        balance.out(i) ~> worker ~> resultsMerge.in(i)
-      GraphClientShape(
-        fromServerWebsocket= priorityMerge.in(0),
-        toServerWebsocket = resultsMerge.out)
-    }
-}
 */
 
+ def flow: Flow[Message, Message, _] = {
 
-  val (upgradeResponse, promise) =
+  import akka.actor._
+  import websockets.client.wsMessageSendingActor
+
+  val wsSource: Source[Message, ActorRef] = Source.actorRef[wsMessageSendingActor](Int.MaxValue, overflowStrategy).map(msg => TextMessage(msg.text))
+
+   val topicConnection = context.system.actorOf(wsMessageSendingActor.props(topic))
+
+        // Create graph of pipe to websocket
+        Flow.fromGraph(GraphDSL.create(wsSource) {
+          implicit builder =>{
+            import akka.stream.Graph
+            import GraphDSL.Implicits._
+            import akka.stream.FlowShape
+
+            val merge = b.add(Merge[Any](2))
+            val toActor = b.add(Sink.actorRef(wsMessageSendingActor, PoisonPill))
+
+            val toWebSocket = builder.add(Flow[Message].map {
+              msg: Message => toActor ! msg
+            })
+
+            val transformIncoming = builder.add(incomingFlow.toMat(Message)(incomingSink))
+
+            builder.materializedValue ~> Flow[ActorRef].map(wsMessageSendingActor.OutgoingDestination) ~> merge.in(0)
+            transformIncoming ~> merge.in(1)
+
+            merge ~> toActor
+
+            FlowShape.of(transformIncoming.in, toWebSocket.out)
+          }  // BUILDER END
+
+
+        })  // FLOW FROM GRAPH END
+
+}
+
+
+//////////////////////////////////////////////
+
+  val (upgradeResponse, future) =
     Http().singleWebSocketRequest( WebSocketRequest("ws://"+address+":"+port+"/"), flow)
 
-  promise.success(None)
+//  promise.success(None)
 }
-
-object Client {
-  def apply(name: String, address: String, port: Int)(implicit actorSystem: ActorSystem): Client = {
-    new Client(name, address, port, actorSystem)
-  }
-}
+*/

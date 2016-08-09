@@ -27,8 +27,6 @@ import scala.concurrent.{ Promise, Future }
 import akka.stream.scaladsl.GraphDSL
 
 class session(id: Int, actorSystem: ActorSystem){
-  // useful but old example
-  // https://github.com/ScalaConsultants/websocket-akka-http/blob/master/src/main/scala/io/scalac/akka/http/websockets/chat/ChatRoom.scala
 
 
  // websocket flow for messages through system
