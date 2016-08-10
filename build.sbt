@@ -31,6 +31,7 @@ libraryDependencies ++= {
   "com.typesafe.akka" %% "akka-http-jackson-experimental" % "2.4.8",
   "com.typesafe.akka" %% "akka-http-spray-json-experimental" % "2.4.8",
   "com.typesafe.akka" %% "akka-http-xml-experimental" % "2.4.8",
-  "com.typesafe.akka" %% "akka-persistence-query-experimental" % "2.4.8"
+  "com.typesafe.akka" %% "akka-persistence-query-experimental" % "2.4.8",
+  "org.scalafx" %% "scalafx" % "8.0.92-R10"
   )
 }
