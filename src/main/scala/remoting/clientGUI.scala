@@ -1,5 +1,5 @@
 package remoting
-
+/*    Whole source commented out for the time being.
 import scalafx.Includes._
 import scalafx.application.JFXApp
 import scalafx.scene.Scene
@@ -10,9 +10,10 @@ import scalafx.scene.layout.GridPane
 import scalafx.geometry.Insets
 import scalafx.stage.Stage
 
-/////////////////////////////////////////////////////////////////////////////////////////
-//  SUPPORTING ACTOR
-/////////////////////////////////////////////////////////////////////////////////////////
+
+
+// -------------------------------------------------------------------------------------------
+// Actor For GUI
 import akka.actor._
 
 case class PollTextLog()
@@ -26,20 +27,38 @@ object clientGUI_actor {
 class clientGUI_actor(client: ActorRef) extends Actor {
  var clientGUIinActor = List.empty[clientGUI]
 
+  //val javaFxActor = context.actorOf(Props[JavaFxActor].withDispatcher("javafx-dispatcher"), "javaFxActor")
+  //javaFxActor ! "to the javafx Actor!"
+
   def receive = {
-    case PollTextLog() => //textArea.text = log.textLog
+    case PollTextLog() =>
+      if(clientGUIinActor.isEmpty){println("clientGUI_actor: start gui." )}
+      else {clientGUIinActor(0).textArea.text = log.textLog}
     case ReceiveMessage(text) =>
-      if(clientGUIinActor.isEmpty){println("start gui. . .")}
-      else {clientGUIinActor(0).textArea.text=text}
+      if(clientGUIinActor.isEmpty){println("clientGUI_actor: start gui.")}
+      else {println("clientGUIactor received message: " + text);clientGUIinActor(0).textArea.text=text}
     case StartGUI(args: Array[String], client: ActorRef) => {
-      var obj = new clientGUI(args, client).main(Array())
-      //clientGUIinActor = List(obj)
+      if(clientGUIinActor.isEmpty){
+      clientGUIinActor = List(startGUI(args, client))
+      clientGUIinActor(0).main(Array())
+      } else {println("clientGUI_actor:  gui already started.")}
     }
   }
+
+  def startGUI(args: Array[String], client: ActorRef): clientGUI = new clientGUI(args, client);
+
 }
-/////////////////////////////////////////////////////////////////////////////////////////
 
+class JavaFxActor extends Actor {
+  def receive = {
+    case _ =>
+    println("javafx actor received message")
+  }
+}
 
+// -------------------------------------------------------------------------------------------
+
+// GUI scalaFX class
 class clientGUI(args: Array[String], clientActor: ActorRef) extends JFXApp {
 
   val textArea = new TextArea() {
@@ -47,7 +66,7 @@ class clientGUI(args: Array[String], clientActor: ActorRef) extends JFXApp {
   }
 
     stage = new JFXApp.PrimaryStage {
-      title.value = "Chatastrophe " + args(0)
+      title.value = args(0)
       // Size properties
       width = 600; height = 450
 
@@ -84,4 +103,4 @@ class clientGUI(args: Array[String], clientActor: ActorRef) extends JFXApp {
     }  // END STAGE
 }
 
-
+*/

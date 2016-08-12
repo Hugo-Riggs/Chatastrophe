@@ -32,6 +32,7 @@ libraryDependencies ++= {
   "com.typesafe.akka" %% "akka-http-spray-json-experimental" % "2.4.8",
   "com.typesafe.akka" %% "akka-http-xml-experimental" % "2.4.8",
   "com.typesafe.akka" %% "akka-persistence-query-experimental" % "2.4.8",
-  "org.scalafx" %% "scalafx" % "8.0.92-R10"
+    "org.scala-lang" % "scala-swing" % "2.11.0-M7"
+  //"org.scalafx" %% "scalafx" % "8.0.92-R10" // switching to SWING
   )
 }

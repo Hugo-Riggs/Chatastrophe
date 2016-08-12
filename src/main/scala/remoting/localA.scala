@@ -24,12 +24,25 @@ class localA extends Actor {
   var gui = List.empty[ActorRef]
 
   def receive = {
-    case Join(address, withName) if server.isEmpty => server = List(context.actorSelection("akka.tcp://ChatastropheRemoteActorSys@"+address+"/user/remoteActor")); server(0) ! UserConnected(withName, self)
-    case SendMessage(text) => server(0) ! ReceiveMessage(text)
-    case ReceiveMessage(text) => println("localActor received: " + text); if(log.keepTextLog) {log.addToTextLog(text)};
-      if(!gui.isEmpty) {gui(0) ! ReceiveMessage(text)} //if(doGuiHook) {guiHook(text)}
-    case Disconnect(name) => server(0) ! Disconnect(name) ; server = List.empty[ActorSelection]
-    case InformClientOfGUI(clientGUIactr: ActorRef) => if (gui.isEmpty) {gui = List(clientGUIactr)} else {println("GUI is already set")}
+    case Join(address, withName) if server.isEmpty =>
+      server = List(context.actorSelection("akka.tcp://ChatastropheRemoteActorSys@"+address+"/user/remoteActor"))
+      server(0) ! UserConnected(withName, self)
+
+    case SendMessage(text) =>
+      server(0) ! ReceiveMessage(text)
+
+    case ReceiveMessage(text) =>
+      println("localActor received: " + text)
+      if(log.keepTextLog) {log.addToTextLog(text)}
+      if(!gui.isEmpty) {println("localActor sending message to GUIactor:")
+        gui(0) ! ReceiveMessage(text)}
+
+    case Disconnect(name) =>
+      server(0) ! Disconnect(name)
+      server = List.empty[ActorSelection]
+
+    //case InformClientOfGUI(clientGUIactr: ActorRef) =>
+      //if (gui.isEmpty) {gui = List(clientGUIactr)} else {println("GUI is already set")}
   }
 
 }
