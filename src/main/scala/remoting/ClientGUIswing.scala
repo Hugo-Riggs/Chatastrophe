@@ -1,5 +1,5 @@
 package remoting
-
+/*
 import scala.swing._
 import akka.actor._
 import event.ButtonClicked
@@ -17,8 +17,10 @@ abstract class GuiEvent
 class UI extends SimpleSwingApplication with GUIProgressEventHandler {
 
   lazy val processItButton = new Button { text = "test button" }
+  lazy val sendButton = new Button { text = "Send" }  // Send message button
   lazy val progressBar = new ProgressBar() {min=0; max=100}
   lazy val messageLabel = new Label { text = "" }
+  lazy val messageComponent = new TextField{ text = "" }
 
   def top = new MainFrame {
     title = "GUI Program #1"
@@ -28,7 +30,8 @@ class UI extends SimpleSwingApplication with GUIProgressEventHandler {
       contents = new BoxPanel(Orientation.Vertical) {
         contents += processItButton
         contents += progressBar
-        contents += messageLabel
+        contents += messageComponent
+        contents += sendButton
       }
 
     val workerActor = createActorSystemWithWorkerActor()
@@ -39,9 +42,9 @@ class UI extends SimpleSwingApplication with GUIProgressEventHandler {
       case ButtonClicked(b) => {
         processItButton.enabled = false
         processItButton.text = "processing"
-        //workerActor ! "Start"
-        workerActor ! "ReceiveText"
+        workerActor ! "ReceiveText1"
       }
+      case
     }
   }
 
@@ -53,7 +56,7 @@ class UI extends SimpleSwingApplication with GUIProgressEventHandler {
         progressBar.value = progress.percentage
       }
       case msg: GuiReceiveMessage => Swing.onEDT {
-        messageLabel.text = msg.toString
+        messageComponent.text = msg.toString
       }
       case ProcessingFinished => Swing.onEDT {
         processItButton.text = "Process it"
@@ -93,7 +96,10 @@ class WorkerActor(val guiUpdateActor: ActorRef) extends Actor {
       }
     }
     case "ReceiveText" => {
-       guiUpdateActor ! GuiReceiveMessage("Hugo's message")
+      guiUpdateActor ! GuiReceiveMessage("Hugo's message")
+    }
+    case "ReceiveText1" => {
+      guiUpdateActor ! GuiReceiveMessage("Hugo's message")
     }
 
       guiUpdateActor ! ProcessingFinished
@@ -103,8 +109,7 @@ class WorkerActor(val guiUpdateActor: ActorRef) extends Actor {
 object GuiProgramOne {
   def main(args: Array[String]) {
     val ui = new UI
-    //ui.visible = true
     ui.top.visible = true
     println("end of main function")
   }
-}
+}*/

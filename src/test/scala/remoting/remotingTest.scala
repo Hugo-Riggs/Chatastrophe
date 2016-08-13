@@ -9,13 +9,18 @@ package remoting
 * Setting up remote actor communication
 * HELPFUL LINKS:
 * AKKA API: http://doc.akka.io/api/akka/2.4/?_ga=1.235847814.628462600.1470328858#akka.stream.stage.Context
+* ScalaSwing API: http://www.scala-lang.org/api/2.11.2/scala-swing/#package
 * SCALAFX API: http://www.scalafx.org/api/8.0/index.html#scalafx.application.JFXApp
+* the dependency i am using: http://vigoo.github.io/posts/2014-01-12-scalafx-with-fxml.html
 * might be helpful in communicating with gui:
 * http://stackoverflow.com/questions/20828726/javafx2-or-scalafx-akka
-*
+* https://groups.google.com/forum/#!topic/akka-user/jvBo7TPo1DY
 * EXAMPLE: http://stackoverflow.com/questions/15547090/akka-bindexception-when-trying-to-connect-to-remote-actor-address-already-in-us
+* Example akka actors and swing interaction: http://stackoverflow.com/questions/15203758/asynchronous-ui-update-with-swing
 * REMOTING WITH ACTORS: http://doc.akka.io/docs/akka/2.4.9-RC2/scala/remoting.html#remote-sample-scala
 * ACTORS: http://doc.akka.io/docs/akka/2.4.9-RC1/scala/actors.html#creating-actors
+*
+* read about serialization warnings: http://doc.akka.io/docs/akka/2.4.0/scala/serialization.html
  */
 
 import org.scalatest.FunSuite
@@ -38,31 +43,19 @@ class SetSuite extends FunSuite {
   val system = ActorSystem("localActorSystem", ConfigFactory.load("client"))        // NEEDED FOR TEST ON LOCAL MACHINE
   val localActor = system.actorOf(localA.props, name="localActr")                 // Start the client
 
-  //---------------------------------------------------------------------------------------------------------
-  // ScalaFX implementation
-  // Start the client GUI
-  //val GUIactor = system.actorOf(clientGUI_actor.props(localActor), name = "guiActor")
-  //GUIactor ! StartGUI(Array("Chatastrophe"), localActor)
-
-  // Try Akka actors on JavaFX EDT
-  //val javaFxActor = system.actorOf(Props[JavaFxActor].withDispatcher("javafx-dispatcher"), "javaFxActor")
-  // javaFxActor ! "TEST"
-
-  //localActor ! InformClientOfGUI(GUIactor)
-  //---------------------------------------------------------------------------------------------------------
-
-  //---------------------------------------------------------------------------------------------------------
-  // Scala-swing implementation
-  GuiProgramOne.main(Array("test"))
-  //val frameActor = system.actorOf(Props[FrameActor].withDispatcher("swing-dispatcher"), "frame-actor")
-  //frameActor ! "test message"
-
-
-   //---------------------------------------------------------------------------------------------------------
   localActor ! Join("127.0.0.1:2552", "Junkrat")
-  localActor ! SendMessage("sent through test code")
 
-  // Already works, working on GUI integration now.
+  //---------------------------------------------------------------------------------------------------------
+  // ScalaFX implementation with ScalaFXML
+
+  val GUI = new GUIscalaFXinitializer(localActor)
+  GUI.main(Array(""))
+
+  //---------------------------------------------------------------------------------------------------------
+
+
+
+  // Already works, working on to GUI integration now.
   /*
   val userName = "Hugo"
 
