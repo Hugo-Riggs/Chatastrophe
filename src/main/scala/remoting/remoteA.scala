@@ -1,7 +1,7 @@
 package remoting
 /*
-* The Server
-* received messages are broadcasted to clients.
+* Two actors: remoteA, a server class, and LogActor which keeps chat history.
+*
  */
 
 import akka.actor._
@@ -32,6 +32,11 @@ object remoteA {
   def props = Props(new remoteA)
 }
 
+/*
+* LogActor is used to keep a chat sessions, chat history.
+*
+ */
+
 case class WriteToLog(text: String)
 case object Poll
 case object ReadFromLog
@@ -42,11 +47,15 @@ class LogActor extends Actor {
   private def write(text: String): Unit = { log += text + "\n" }
 
   def receive = {
-    case WriteToLog(text) => write(text)
+    case WriteToLog(text) => { println(text); write(text) }
     case ReadFromLog => sender ! log
     case any: Any => println("unhandled message received by logging actor (" + any + ". . .")
   }
 }
+
+/*
+ * Remote actor is our server, clients actors may connect to it.
+ */
 
 class remoteA extends Actor {
   // Message of the day
@@ -58,29 +67,20 @@ class remoteA extends Actor {
   // A hash of connected clients
   var  connections = Map.empty[String, ActorRef]
 
+  // Upon receiveing a message
   def receive = {
-    case UserConnected(user, actorRef) =>
+    case UserConnected(user, actorRef) =>   // A user joins
       connections += user -> actorRef
-      sender ! ReceiveMessage(messageOfTheDay)
-      println("user: " + user + " joined.");
+      logActor ! WriteToLog("user: " + user + " joined.")
+      //sender ! ReceiveMessage(messageOfTheDay)
 
-    case ReceiveMessage(text) =>
-      logActor ! WriteToLog(text)
-      self ! Poll
-      //logActor ! ReadFromLog
-    //logActor.write(text)
-      /*connections foreach { e =>
-        val(usrStr, actr) = e
-        actr ! logActor.get//ReceiveMessage(text)
-        actr ! logActor ! ReadFromLog*/
+    case ReceiveMessage(text) =>    // Client has sent a chat message to server, server receives message (a0)(1)
+      logActor ! WriteToLog(text)   // (a0)(2) write to log
+      println("step 2: write to log")
+      self ! Poll                   // (a0)(3) send log to all clients
+      println("step 3: send log to all clients")
 
-    case Disconnect(user) =>
-      sender() ! ReceiveMessage("bye")
-      connections -= user
-      self ! ReceiveMessage("user " + user + " disconneccted")
-    //connections = connections filterKeys(_ != user)
-
-    case Poll  =>
+    case Poll  =>   // Send latest chat messages to all users
       implicit val ec = ExecutionContext.global
       implicit val timeout = Timeout(5 seconds)
       val f = (logActor ? ReadFromLog).mapTo[String]
@@ -92,18 +92,15 @@ class remoteA extends Actor {
         case s =>
         connections foreach { e =>
           val(u, a) = e
-          println("\n\nPOLL RETURNING " + s+"\n" + " btw connections length is " + connections.size)
+          println("poll returning " + s)
           a ! ReceiveMessage(s)
         }
       }
 
-     /*
-        val fu: Future[String] = (logActor ? ReadFromLog).mapTo[String]
-        val s: String = fu.value.get.get
-        connections foreach { e =>
-          val(u, a) = e
-          a ! ReceiveMessage(s)
-        }*/
+    case Disconnect(user) =>    //  A client has disconnectd
+      sender() ! ReceiveMessage("bye")
+      connections -= user
+      self ! ReceiveMessage("user " + user + " disconneccted")
 
     case any: Any => println("received " + any); sender ! ReceiveMessage("unsupported message (" + any + ")")
   }

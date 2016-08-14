@@ -43,6 +43,7 @@ class SetSuite extends FunSuite {
   val system = ActorSystem("localActorSystem", ConfigFactory.load("client"))        // NEEDED FOR TEST ON LOCAL MACHINE
   val localActor = system.actorOf(localA.props, name="localActr")                 // Start the client
 
+  //localActor ! Join("192.168.1.101:2552", "Junkrat")
   localActor ! Join("127.0.0.1:2552", "Junkrat")
 
   //---------------------------------------------------------------------------------------------------------

@@ -12,6 +12,8 @@ import akka.pattern.ask
 import scala.concurrent.Future
 
 case class PassClientActor(val actor: ActorRef)
+case class GUImessage(sendMessage: SendMessage)
+case object Request
 
 
 @sfxml
@@ -22,53 +24,47 @@ class SimplePresenter (
                             private val clientActor: ActorRef
                      ) {
 
-/*
-  implicit val timeout = Timeout(5 seconds)
-  val f: Future[ReceiveMessage] =
-    for {
-      text <- ask(localA, ReceiveMessage).mapTo[String]
-    } yield ReceiveMessage(text)
-
-  msgArea.text = f
-  */
   import scala.concurrent.duration._
   import akka.util.Timeout
   import akka.pattern.ask
   import akka.actor._
   import scala.concurrent.{Await, ExecutionContext, Future, Promise}
 
-  implicit val timeout = Timeout(5 seconds)
-  val future = clientActor ? "hello"
-
   var switchBool: Boolean = false
+  implicit val ec = ExecutionContext.global
+  implicit val timeout = Timeout(5 seconds)
 
-  def onSend(event: ActionEvent) {
-    clientActor ! SendMessage(ourMessage.text.value)
+  def recReadLog(msgs: String): Unit = {
+   def process(msgs: String, acc: String = msgs): Unit ={
+     val test = msgs.eq(acc)
+     test match {
+      case false  => msgArea.text = msgs
+      case  true => {
+        val f = (clientActor ? Request).mapTo[String]
+        val p = Promise[String]()
+        p completeWith f
+        p.future onSuccess  {
+          case s => process(s, acc)
+        }
+      }
+    }
+  }
+   process(msgs)
+  }
 
-    implicit val ec = ExecutionContext.global
-    implicit val timeout = Timeout(5 seconds)
-    clientActor ! Poll
-     val f = (clientActor ? ReceiveMessage).mapTo[String]
-  //  val f = (clientActor ? Poll).mapTo[String]
+  def onSend(event: ActionEvent) {                    // message algorithm
+    // Start(0): by sending message to server
+    val f = (clientActor ? GUImessage(SendMessage(ourMessage.text.value))).mapTo[String]
     val p = Promise[String]()
 
     p completeWith f
 
     p.future onSuccess {
-      case s => msgArea.text = msgArea.text.value + s
+      case s => {println("gui got its future"); recReadLog(s) } //(6): update clients text log : END
     }
 
     ourMessage.text = ""
-
-    //println("future" + future)
-    //println("sending message. . ." + ourMessage.text.value)
-    //Messaging through GUI with actors
-    //localActor ! ourMessage.text.value + "\n"
   }
 
-  def onUpdateMessages(event: ActionEvent) {
-    println("updating message area. . . ")
-    msgArea.text = "TODO: receive message from remote actor here"
-  }
 
 }
