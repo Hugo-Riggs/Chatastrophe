@@ -14,6 +14,7 @@ import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
+case class PassGUIsysActr(actorRef: ActorRef)
 
 object localA {
   def props: Props = Props(new localA)
@@ -21,7 +22,6 @@ object localA {
 
 
 class localA extends Actor {
-
   var server = List.empty[ActorSelection]
   var gui = List.empty[ActorRef]
   var ourName = ""
@@ -34,12 +34,12 @@ class localA extends Actor {
       server(0) ! UserConnected(withName, self)
 
     case SendMessage(text) =>
-      if (server.isEmpty) {println("first join the server")}                  // message algorithm
-      else { println("step 0: send message to server");server(0) ! ReceiveMessage(ourName+": "+text) ; self ! Poll}     // Start(a0)(0): by sending message to server
+      if (server.isEmpty) {println("first join the server")}
+      else { server(0) ! ReceiveMessage(ourName+": "+text) }
 
-    case ReceiveMessage(text) =>                                              // (a0)(4): A client receives latest log
-      println("step 4: localActor received: " + text)
-      logReceived = text; println("step 5: log update on client " + logReceived) // (a0)(5): update client's log to latest log
+    case ReceiveMessage(text) =>
+      logReceived = text
+      if(!gui.isEmpty) { println("CLIENT SENDING MESSAGE TO GUI " + text); gui(0) ! ReceiveMessage(text)}
 
     case Disconnect(name) =>
       server(0) ! Disconnect(name)
@@ -49,22 +49,18 @@ class localA extends Actor {
     case Poll =>
       server(0) ! Poll
 
-    //case Request =>
-    case GUImessage(sendMessage) =>
-      // (a0)(6) allow GUI to ask for client's text log
-
-      implicit val ec = ExecutionContext.global
-      implicit val timeout = Timeout(5 seconds)
-
-      self ! sendMessage
-//      println("localA bang sendMessage")
-      sender ! logReceived              // this returns our log right after sending message, without waiting for our log to be updated
- //     println("GUI bang logReceived")
-
-    case Request =>
+    case GUI_Request =>
       sender ! logReceived
+      //server(0) forward GUI_Request
 
+    case PassGUIsysActr(actorRef) =>
+      gui = List(actorRef)
+      sender ! "OK"
+
+    case "keepAlive" =>
+      sender ! "OK"
   }
+
 
 
 }

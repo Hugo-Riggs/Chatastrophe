@@ -1,70 +1,84 @@
 
 package remoting
 
-import scalafx.scene.control.{Button, ListView, TextField, TextArea}
+import scalafx.scene.control.{ Button, ListView, TextField, TextArea }
 import scalafx.beans.property.StringProperty
 import scalafx.beans.binding.StringExpression
 import scalafx.event.ActionEvent
 import scalafxml.core.macros.sfxml
-import akka.actor._
-import akka.util.Timeout
-import akka.pattern.ask
-import scala.concurrent.Future
-
-case class PassClientActor(val actor: ActorRef)
-case class GUImessage(sendMessage: SendMessage)
-case object Request
-
+import akka.actor.{ ActorSystem, Inbox, ActorRef }
 
 @sfxml
 class SimplePresenter (
                             private val ourMessage: TextField,
                             private val msgArea: TextArea,
-                            private val actor: PassClientActor,
+                            private val sys: ActorSystem,
                             private val clientActor: ActorRef
                      ) {
 
-  import scala.concurrent.duration._
   import akka.util.Timeout
   import akka.pattern.ask
-  import akka.actor._
-  import scala.concurrent.{Await, ExecutionContext, Future, Promise}
-
-  var switchBool: Boolean = false
+  import scala.concurrent.duration._
+  import scala.concurrent.{ Await, ExecutionContext, Future, Promise }
   implicit val ec = ExecutionContext.global
   implicit val timeout = Timeout(5 seconds)
 
-  def recReadLog(msgs: String): Unit = {
-   def process(msgs: String, acc: String = msgs): Unit ={
-     val test = msgs.eq(acc)
-     test match {
-      case false  => msgArea.text = msgs
-      case  true => {
-        val f = (clientActor ? Request).mapTo[String]
-        val p = Promise[String]()
-        p completeWith f
-        p.future onSuccess  {
-          case s => process(s, acc)
-        }
+  val i = Inbox.create(sys)
+  i watch clientActor
+  i send(clientActor, PassGUIsysActr(i.getRef))
+
+  def fn = {
+    val f = i.receive(5 seconds)
+    f match {
+      case ReceiveMessage(text) =>  msgArea.text = text
+      case _ => println("GUI RECEIVING : " + f)
+    }
+  }
+
+  fn
+
+  def RecFunc = {
+
+    def loop: Unit = {
+      println("INNER LOOP")
+      val f = i.receive(5 seconds)
+      f match {
+        case ReceiveMessage(text) => { msgArea.text = text; i send(clientActor, "keepAlive"); loop }
+        case "OK" => { msgArea.text = "We Connected"; i send(clientActor, "keepAlive"); loop }
+        case _ => msgArea.text = "ERROR: unhandled message"
       }
     }
+    loop
   }
-   process(msgs)
-  }
 
-  def onSend(event: ActionEvent) {                    // message algorithm
-    // Start(0): by sending message to server
-    val f = (clientActor ? GUImessage(SendMessage(ourMessage.text.value))).mapTo[String]
-    val p = Promise[String]()
+  //RecFunc
 
-    p completeWith f
-
-    p.future onSuccess {
-      case s => {println("gui got its future"); recReadLog(s) } //(6): update clients text log : END
-    }
-
+  def onSend(event: ActionEvent) {
+    i send(clientActor, SendMessage(ourMessage.text.value))
+    //clientActor ! SendMessage(ourMessage.text.value)
     ourMessage.text = ""
   }
+
+
+/*
+  def RecUpdateMsgs = {
+    implicit val ec = ExecutionContext.global
+    implicit val timeout = Timeout(5 seconds)
+
+    def loop(f: Future[String]): Unit ={
+      val p = Promise[String]()
+      p completeWith f
+      p.future onSuccess { case s =>
+        msgArea.text = s
+  //      loop((clientActor ? GUI_Request).mapTo[String])
+      }
+    }
+
+    loop((clientActor ? GUI_Request).mapTo[String])
+  }
+
+  //RecUpdateMsgs // Users far too much CPU
+*/
 
 
 }
