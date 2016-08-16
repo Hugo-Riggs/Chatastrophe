@@ -1,7 +1,6 @@
 package remoting
 /*
 * Two actors: remoteA, a server class, and LogActor which keeps chat history.
-*
  */
 
 import akka.actor._

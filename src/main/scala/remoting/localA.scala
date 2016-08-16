@@ -14,7 +14,6 @@ import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
-case class PassGUIsysActr(actorRef: ActorRef)
 
 object localA {
   def props: Props = Props(new localA)
@@ -24,6 +23,7 @@ object localA {
 class localA extends Actor {
   var server = List.empty[ActorSelection]
   var gui = List.empty[ActorRef]
+  var guiM = List.empty[ActorRef]
   var ourName = ""
   var logReceived = ""
 
@@ -40,6 +40,7 @@ class localA extends Actor {
     case ReceiveMessage(text) =>
       logReceived = text
       if(!gui.isEmpty) { println("CLIENT SENDING MESSAGE TO GUI " + text); gui(0) ! ReceiveMessage(text)}
+      if(!guiM.isEmpty) { println("CLIENT SENDING MESSAGE TO MEDIATOR" + text); guiM(0) ! Unlock(text) }
 
     case Disconnect(name) =>
       server(0) ! Disconnect(name)
@@ -56,6 +57,10 @@ class localA extends Actor {
     case PassGUIsysActr(actorRef) =>
       gui = List(actorRef)
       sender ! "OK"
+
+    case Waiting => println("CLIENT RECEIVED WAITING")
+
+    case PassMediator(m) => guiM = List(m)
 
     case "keepAlive" =>
       sender ! "OK"
