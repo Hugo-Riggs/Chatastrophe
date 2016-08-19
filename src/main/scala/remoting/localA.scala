@@ -50,9 +50,10 @@ class localA extends Actor {
     case Poll =>
       server(0) ! Poll
 
+      // These casses could have some useful implementation purposes
+      // However right now they are not very functional in this program.
     case GUI_Request =>
       sender ! logReceived
-      //server(0) forward GUI_Request
 
     case PassGUIsysActr(actorRef) =>
       gui = List(actorRef)
@@ -65,7 +66,6 @@ class localA extends Actor {
     case "keepAlive" =>
       sender ! "OK"
   }
-
 
 
 }
