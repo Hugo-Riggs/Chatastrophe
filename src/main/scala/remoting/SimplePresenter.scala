@@ -1,10 +1,12 @@
 
 package remoting
 
-import scalafx.scene.control.{ TextField, TextArea }
+import scalafx.scene.control.{TextArea, TextField}
 import scalafx.event.ActionEvent
 import scalafxml.core.macros.sfxml
-import akka.actor.{ ActorSystem, Props, Actor, Inbox, ActorRef }
+import akka.actor.{Actor, ActorRef, ActorSystem, Inbox, Kill, PoisonPill, Props}
+
+import scalafx.application.Platform
 
 case class PassMediator(mediator: ActorRef)
 case class PassGUIsysActr(g: ActorRef)
@@ -35,6 +37,10 @@ class Mediator extends Actor {
   def Unlocked: Receive = {
     case UnlockMediator => println("MEDIATOR ALREADY UNLOCKED")
     case LockMediator => become(Locked)
+    case "Kill" =>
+      println("MEDIATOR RECEIVED KILL SIGNAL " )
+      gui(0) ! PoisonPill // Kill GUI's actor
+      self ! PoisonPill
     case _ => println("UNKOWN MESSAGE IN MEDIATOR UNLOCKED STATE")
   }
 
@@ -42,6 +48,10 @@ class Mediator extends Actor {
     case LockMediator => println("MEDIATOR ALREADY LOCKED")
     case Unlock(msg) => gui(0) ! ReceiveMessage(msg); become(Unlocked)
     case Waiting => client(0) ! Waiting
+    case "Kill" =>
+      println("MEDIATOR RECEIVED KILL SIGNAL " )
+      gui(0) ! PoisonPill // Kill GUI's actor
+      self ! PoisonPill
     case x: Any => println("UNKOWN MESSAGE IN MEDIATOR LOCKED STATE " + x)
   }
   // end of simple two state machine
@@ -102,6 +112,11 @@ class SimplePresenter (
   def onEnter(event: ActionEvent): Unit = {
      i send(clientActor, SendMessage(ourMessage.text.value))
      ourMessage.text = ""
+  }
+
+  def onClose(event: ActionEvent): Unit = {
+    i send(clientActor, "GUIissuesDisconnect")
+    Platform.exit()
   }
 
   // TODO: Add more buttons/GUI features in general (timestamps, connect interface . . .).

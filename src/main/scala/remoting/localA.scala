@@ -9,18 +9,17 @@ package remoting
 import akka.actor._
 import scala.language.postfixOps
 
-object main extends App {
-  remoteInit.init   // Start the server actor
+object client extends App {
+  //remoteInit.init   // Start the server actor
 
   import com.typesafe.config.ConfigFactory                                          // NEEDED FOR TEST ON LOCAL MACHINE
   val system = ActorSystem("localActorSystem", ConfigFactory.load("client"))        // NEEDED FOR TEST ON LOCAL MACHINE
 
   val localActor = system.actorOf(localA.props, name="localActr")                 // Start the client
-  localActor ! Join("127.0.0.1:2552", "Junkrat")                                  // Connect
+  //localActor ! Join("127.0.0.1:2552", "Junkrat")                                  // Connect
 
   val GUI = new GUIscalaFXinitializer(localActor, system)  // ScalaFX implementation with ScalaFXML
   GUI.main(Array(""))
-
 }
 
 object localA {
@@ -42,21 +41,22 @@ class localA extends Actor {
       server(0) ! UserConnected(withName, self)
 
     case SendMessage(text) =>
-      if (server.isEmpty) {println("first join the server")}
-      else { server(0) ! ReceiveMessage(ourName+": "+text+"\n") }
+      if (!server.isEmpty) server(0) ! ReceiveMessage(ourName+": "+text+"\n") else println("first join the server")
 
     case ReceiveMessage(text) =>
       logReceived = text
-      if(!gui.isEmpty) { println("CLIENT SENDING MESSAGE TO GUI " + text); gui(0) ! ReceiveMessage(text)}
-      if(!guiM.isEmpty) { println("CLIENT SENDING MESSAGE TO MEDIATOR" + text); guiM(0) ! Unlock(text) }
+      if(!gui.isEmpty) gui(0) ! ReceiveMessage(text) else println("GUI IS NOT SET")
+      if(!guiM.isEmpty) guiM(0) ! Unlock(text) else println("GUI MEDIATOR IS NOT SET")
 
     case Disconnect(name) =>
-      server(0) ! Disconnect(name)
+      if(!server.isEmpty) server(0) ! Disconnect(name) else println("SERVER NOT SET")
       server = List.empty[ActorSelection]
-      self ! Kill
+      if(!guiM.isEmpty) guiM(0) ! "Kill" else println("GUI MEDIATOR IS NOT SET")
+      self ! PoisonPill
 
     case Poll =>
-      server(0) ! Poll
+      if(!server.isEmpty) server(0) ! Poll else println("SERVER NOT SET")
+
 
       // These casses could have some useful implementation purposes
       // However right now they are not very functional in this program.
@@ -73,6 +73,9 @@ class localA extends Actor {
 
     case "keepAlive" =>
       sender ! "OK"
+
+    case "GUIissuesDisconnect" =>
+      self ! Disconnect(ourName)  // As if client had requested disconnect
   }
 
 

@@ -118,5 +118,4 @@ class remoteA extends Actor {
 
     case any: Any => println("received " + any); sender ! ReceiveMessage("unsupported message (" + any + ")")
   }
-
 }
