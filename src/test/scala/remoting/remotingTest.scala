@@ -26,34 +26,18 @@ package remoting
 import org.scalatest.FunSuite
 import akka.actor._
 
-import akka.dispatch.{ DispatcherPrerequisites, ExecutorServiceFactory, ExecutorServiceConfigurator }
-import com.typesafe.config.Config
-import java.util.concurrent.{ ExecutorService, AbstractExecutorService, ThreadFactory, TimeUnit }
-import java.util.Collections
-import javax.swing.SwingUtilities
-import javafx.application.Platform
-
-
 
 class SetSuite extends FunSuite {
-
-  //remoteInit.init   // Start the server actor
+  remoteInit.init   // Start the server actor
 
   import com.typesafe.config.ConfigFactory                                          // NEEDED FOR TEST ON LOCAL MACHINE
   val system = ActorSystem("localActorSystem", ConfigFactory.load("client"))        // NEEDED FOR TEST ON LOCAL MACHINE
+
   val localActor = system.actorOf(localA.props, name="localActr")                 // Start the client
+  localActor ! Join("127.0.0.1:2552", "Junkrat")                                  // Connect
 
-//  localActor ! Join("127.0.0.1:2552", "Junkrat")  //localActor ! Join("192.168.1.101:2552", "Junkrat")
-    localActor ! Join("10.250.27.26:2552", "Junkrat1")  //localActor ! Join("192.168.1.101:2552", "Junkrat")
-
-  //---------------------------------------------------------------------------------------------------------
-  // ScalaFX implementation with ScalaFXML
-
-  val GUI = new GUIscalaFXinitializer(localActor, system)
+  val GUI = new GUIscalaFXinitializer(localActor, system)  // ScalaFX implementation with ScalaFXML
   GUI.main(Array(""))
-
-
-  //---------------------------------------------------------------------------------------------------------
 
 
 

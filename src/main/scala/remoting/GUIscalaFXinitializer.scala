@@ -16,7 +16,7 @@ import akka.actor._
 
 class GUIscalaFXinitializer(actorRef: ActorRef, sys: ActorSystem) extends JFXApp {
 
-  val root = FXMLView(getClass.getResource("startscreen.fxml"),
+  val root = FXMLView(getClass.getResource("clientGUI.fxml"),
     new DependenciesByType(Map(
       typeOf[ActorRef] -> actorRef,
       typeOf[ActorSystem] -> sys)))

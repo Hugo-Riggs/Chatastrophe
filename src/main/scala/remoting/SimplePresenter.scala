@@ -21,7 +21,7 @@ case object Waiting
 * the underlying client and the GUI. It makes
 * use of a Locked and Unlocked set of states.
 * All blocking occurs on this actor which
-* allows uninterupted use of the GUI and client.
+* allows un-interrupted use of the GUI and client.
 */
 
 object Mediator {
@@ -83,9 +83,7 @@ class SimplePresenter (
   i send(clientActor, PassMediator(mediator))
   i send(mediator, LockMediator)
 
- // TODO: Handle the i.receive's timeout gracefully, currently timeout causes program to stop working, and
- // that is why it is set at 1 hour.
-  // Recursively update messages in GUI
+  // Recursively update messages in GUI, wait an hour then fail..
   def fn: Unit = {
     i send(mediator, LockMediator)
     mediator ! Waiting
@@ -102,6 +100,11 @@ class SimplePresenter (
   def onSend(event: ActionEvent) {
     i send(clientActor, SendMessage(ourMessage.text.value))
     ourMessage.text = ""
+  }
+
+  def onEnter(event: ActionEvent): Unit = {
+     i send(clientActor, SendMessage(ourMessage.text.value))
+     ourMessage.text = ""
   }
 
   // TODO: Add more buttons/GUI features in general (timestamps, connect interface . . .).

@@ -7,13 +7,21 @@ package remoting
  */
 
 import akka.actor._
-import akka.pattern.ask
-import akka.util.Timeout
-import scala.concurrent.Promise
-import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.concurrent.duration._
 import scala.language.postfixOps
 
+object main extends App {
+  remoteInit.init   // Start the server actor
+
+  import com.typesafe.config.ConfigFactory                                          // NEEDED FOR TEST ON LOCAL MACHINE
+  val system = ActorSystem("localActorSystem", ConfigFactory.load("client"))        // NEEDED FOR TEST ON LOCAL MACHINE
+
+  val localActor = system.actorOf(localA.props, name="localActr")                 // Start the client
+  localActor ! Join("127.0.0.1:2552", "Junkrat")                                  // Connect
+
+  val GUI = new GUIscalaFXinitializer(localActor, system)  // ScalaFX implementation with ScalaFXML
+  GUI.main(Array(""))
+
+}
 
 object localA {
   def props: Props = Props(new localA)
