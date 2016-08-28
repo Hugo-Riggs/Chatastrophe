@@ -1,9 +1,7 @@
 
 package remoting
 
-import scalafx.scene.control.{ Button, ListView, TextField, TextArea }
-import scalafx.beans.property.StringProperty
-import scalafx.beans.binding.StringExpression
+import scalafx.scene.control.{ TextField, TextArea }
 import scalafx.event.ActionEvent
 import scalafxml.core.macros.sfxml
 import akka.actor.{ ActorSystem, Props, Actor, Inbox, ActorRef }
@@ -67,9 +65,8 @@ class SimplePresenter (
                      ) {
 
   import akka.util.Timeout
-  import akka.pattern.ask
   import scala.concurrent.duration._
-  import scala.concurrent.{ Await, ExecutionContext, Future, Promise }
+  import scala.concurrent.{ ExecutionContext, Future, Promise }
 
   implicit val ec = ExecutionContext.global
   implicit val timeout = Timeout(30 seconds)
@@ -91,7 +88,7 @@ class SimplePresenter (
     val p = Promise[ReceiveMessage]()
     p completeWith r
     p.future onSuccess {
-      case x => println(x); fn; msgArea.text = x.text
+      case x => println(x); fn; msgArea.text = msgArea.text.value + x.text //msgArea.text = x.text// for reading whole log
     }
   }
 

@@ -28,13 +28,25 @@ import akka.actor._
 
 
 class SetSuite extends FunSuite {
+<<<<<<< HEAD
+=======
+
+>>>>>>> 7c746020fe45881afd55353adda3b533fdb26a9b
   remoteInit.init   // Start the server actor
 
   import com.typesafe.config.ConfigFactory                                          // NEEDED FOR TEST ON LOCAL MACHINE
   val system = ActorSystem("localActorSystem", ConfigFactory.load("client"))        // NEEDED FOR TEST ON LOCAL MACHINE
 
+<<<<<<< HEAD
   val localActor = system.actorOf(localA.props, name="localActr")                 // Start the client
   localActor ! Join("127.0.0.1:2552", "Junkrat")                                  // Connect
+=======
+  localActor ! Join("127.0.0.1:2552", "Junkrat")  //localActor ! Join("192.168.1.101:2552", "Junkrat")
+    //localActor ! Join("10.250.27.26:2552", "Desktop")  //localActor ! Join("192.168.1.101:2552", "Junkrat")
+
+  //---------------------------------------------------------------------------------------------------------
+  // ScalaFX implementation with ScalaFXML
+>>>>>>> 7c746020fe45881afd55353adda3b533fdb26a9b
 
   val GUI = new GUIscalaFXinitializer(localActor, system)  // ScalaFX implementation with ScalaFXML
   GUI.main(Array(""))
