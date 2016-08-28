@@ -35,7 +35,7 @@ class localA extends Actor {
 
     case SendMessage(text) =>
       if (server.isEmpty) {println("first join the server")}
-      else { server(0) ! ReceiveMessage(ourName+": "+text) }
+      else { server(0) ! ReceiveMessage(ourName+": "+text+"\n") }
 
     case ReceiveMessage(text) =>
       logReceived = text

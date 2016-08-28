@@ -93,7 +93,7 @@ class SimplePresenter (
     val p = Promise[ReceiveMessage]()
     p completeWith r
     p.future onSuccess {
-      case x => println(x); fn; msgArea.text = x.text
+      case x => println(x); fn; msgArea.text = msgArea.text.value + x.text //msgArea.text = x.text// for reading whole log
     }
   }
 

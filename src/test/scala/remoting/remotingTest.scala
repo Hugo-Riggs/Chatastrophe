@@ -37,14 +37,14 @@ import javafx.application.Platform
 
 class SetSuite extends FunSuite {
 
-  //remoteInit.init   // Start the server actor
+  remoteInit.init   // Start the server actor
 
   import com.typesafe.config.ConfigFactory                                          // NEEDED FOR TEST ON LOCAL MACHINE
   val system = ActorSystem("localActorSystem", ConfigFactory.load("client"))        // NEEDED FOR TEST ON LOCAL MACHINE
   val localActor = system.actorOf(localA.props, name="localActr")                 // Start the client
 
-//  localActor ! Join("127.0.0.1:2552", "Junkrat")  //localActor ! Join("192.168.1.101:2552", "Junkrat")
-    localActor ! Join("10.250.27.26:2552", "Junkrat1")  //localActor ! Join("192.168.1.101:2552", "Junkrat")
+  localActor ! Join("127.0.0.1:2552", "Junkrat")  //localActor ! Join("192.168.1.101:2552", "Junkrat")
+    //localActor ! Join("10.250.27.26:2552", "Desktop")  //localActor ! Join("192.168.1.101:2552", "Junkrat")
 
   //---------------------------------------------------------------------------------------------------------
   // ScalaFX implementation with ScalaFXML

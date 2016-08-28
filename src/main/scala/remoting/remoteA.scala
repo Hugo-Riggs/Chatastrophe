@@ -50,6 +50,7 @@ case class Join(address: String, withName: String)
 case class SendMessage(text: String)
 case class ReceiveMessage(text: String)
 case class Disconnect(user: String)
+case class BroadcastIncoming(text: String)
 
 case object GUI_Request
 case object Broadcast
@@ -78,7 +79,8 @@ class remoteA extends Actor {
 
     case ReceiveMessage(text) =>
       logActor ! WriteToLog(text)
-      self ! Broadcast
+      self ! BroadcastIncoming(text)
+      //self ! Broadcast
 
     case Broadcast  =>   // Send latest chat messages to all users
       val f = (logActor ? ReadFromLog).mapTo[String]
@@ -90,6 +92,12 @@ class remoteA extends Actor {
           val(user, actorRef) = e
           actorRef ! ReceiveMessage(s)
         }
+      }
+
+    case BroadcastIncoming(text) =>
+      connections foreach { e =>
+      val(user, actorRef) = e
+      actorRef ! ReceiveMessage(text)
       }
 
     case Poll => {
