@@ -4,7 +4,7 @@ package remoting
 import scalafx.scene.control.{TextArea, TextField}
 import scalafx.event.ActionEvent
 import scalafxml.core.macros.sfxml
-import akka.actor.{Actor, ActorRef, ActorSystem, Inbox, Kill, PoisonPill, Props}
+import akka.actor.{Actor, ActorRef, ActorSystem, Inbox, PoisonPill, Props}
 
 import scalafx.application.Platform
 

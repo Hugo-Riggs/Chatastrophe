@@ -18,8 +18,8 @@ object client extends App {
   val localActor = system.actorOf(localA.props, name="localActr")                 // Start the client
   //localActor ! Join("127.0.0.1:2552", "Junkrat")                                  // Connect
 
-  val GUI = new GUIscalaFXinitializer(localActor, system)  // ScalaFX implementation with ScalaFXML
-  GUI.main(Array(""))
+  //val GUI = new GUIscalaFXinitializer(localActor, system)  // ScalaFX implementation with ScalaFXML
+  //GUI.main(Array(""))
 }
 
 object localA {
@@ -77,6 +77,4 @@ class localA extends Actor {
     case "GUIissuesDisconnect" =>
       self ! Disconnect(ourName)  // As if client had requested disconnect
   }
-
-
 }

@@ -4,7 +4,6 @@ package remoting
  */
 
 import akka.actor._
-
 import akka.pattern.ask
 import akka.util.Timeout
 import scala.concurrent.duration._
@@ -26,7 +25,6 @@ object remoteInit extends App {
  */
 case class WriteToLog(text: String)
 case object ReadFromLog
-case object DidNewWriteOccur
 
 class LogActor extends Actor {
   private var log: String = ""
@@ -45,7 +43,7 @@ class LogActor extends Actor {
  * Remote actor is our server, clients actors may connect to it.
  */
 case class UserConnected(user: String, actorRef: ActorRef)
-case class Join(address: String, withName: String)
+case class Join(address: String, withName: String)  // only used by client (localActor).
 case class SendMessage(text: String)
 case class ReceiveMessage(text: String)
 case class Disconnect(user: String)
@@ -65,40 +63,38 @@ class remoteA extends Actor {
 
   // A log actor from which clients may poll
   val logActor = context.actorOf(Props(classOf[LogActor]))
-
   // A hash of connected clients
-  var  connections = Map.empty[String, ActorRef]
+  var  connections = Map.empty[String, ActorRef] // TODO: can this be a val not var??
 
   // Upon receiveing a message
   def receive = {
     case UserConnected(user, actorRef) =>   // A user joins
       connections += user -> actorRef
-      logActor ! WriteToLog("user: " + user + " joined.")
-      self ! Broadcast
+      self ! ReceiveMessage("user: " + user + " joined.")
 
     case ReceiveMessage(text) =>
       logActor ! WriteToLog(text)
       self ! BroadcastIncoming(text)
 
-    case Broadcast  =>   // Send latest chat messages to all users
+    case Broadcast  =>   // Send latest chat messages to all users. TODO: Perhaps obsolete
       val f = (logActor ? ReadFromLog).mapTo[String]
       val p = Promise[String]()
       p completeWith f
       p.future onSuccess {
         case s =>
-        connections foreach { e =>
-          val(user, actorRef) = e
-          actorRef ! ReceiveMessage(s)
-        }
+          connections foreach { e =>
+            val(user, actorRef) = e
+            actorRef ! ReceiveMessage(s)
+          }
       }
 
-    case BroadcastIncoming(text) =>
+    case BroadcastIncoming(text) =>  // Push all incoming messages out to each client.
       connections foreach { e =>
       val(user, actorRef) = e
       actorRef ! ReceiveMessage(text)
       }
 
-    case Poll => {
+    case Poll => {  // Same as Broadcast except it only sends to one other.
       val f = (logActor ? ReadFromLog).mapTo[String]
       val p = Promise[String]()
       p completeWith f
@@ -108,7 +104,7 @@ class remoteA extends Actor {
       }
    }
 
-    case Disconnect(user) =>    //  A client has disconnectd
+    case Disconnect(user) =>    //  Signal received from a client when they wish to disconnect from the server.
       sender() ! ReceiveMessage("bye")
       connections -= user
       self ! ReceiveMessage("user " + user + " disconneccted")
