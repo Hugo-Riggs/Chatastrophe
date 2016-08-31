@@ -36,8 +36,10 @@ class SetSuite extends FunSuite {
   val localActor = system.actorOf(localA.props, name="localActr")                 // Start the client
   localActor ! Join("127.0.0.1:2552", "Junkrat")                                  // Connect
 
-  val GUI = new GUIscalaFXinitializer(localActor, system)  // ScalaFX implementation with ScalaFXML
-  GUI.main(Array(""))
+val GUI = clientGUI.main(Array[String](""))
+println("gui made")
+//  val GUI = new GUIscalaFXinitializer(localActor, system)  // ScalaFX implementation with ScalaFXML
+ // GUI.main(Array(""))
 
   // Already works, working on to GUI integration now.
   /*
