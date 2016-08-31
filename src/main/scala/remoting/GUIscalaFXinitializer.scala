@@ -3,8 +3,6 @@ package remoting
 import scalafx.Includes._
 import scalafx.application.JFXApp
 import scalafx.scene.Scene
-import scalafx.scene.control._
-import scalafx.stage.Stage
 import scala.reflect.runtime.universe.typeOf
 import scalafxml.core.{DependenciesByType, FXMLView}
 import akka.actor._
