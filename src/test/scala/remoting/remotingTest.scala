@@ -30,6 +30,10 @@ import akka.actor._
 class SetSuite extends FunSuite {
   remoteInit.init   // Start the server actor
 
+  val x = System.getenv("JAVA_HOME")
+  println(s"JAVA_HOME = ${x}")
+  readLine
+
   import com.typesafe.config.ConfigFactory                                          // NEEDED FOR TEST ON LOCAL MACHINE
   val system = ActorSystem("localActorSystem", ConfigFactory.load("client"))        // NEEDED FOR TEST ON LOCAL MACHINE
 

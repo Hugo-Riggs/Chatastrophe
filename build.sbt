@@ -9,14 +9,21 @@ scalaVersion := "2.11.8"
 resolvers += Resolver.sonatypeRepo("releases")
 addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
 
+
+// fix for modena style sheet not found
+
+
 unmanagedJars in Compile += {
   val ps = new sys.SystemProperties
   val jh = ps("java.home")
-  Attributed.blank(file(jh) / "lib/ext/jfxrt.jar")
+  Attributed.blank(file(jh) / "jre/lib/ext/jfxrt.jar")
 }
+
+//unmanagedJars in Compile += Attributed.blank(file("/lib64/jdk1.8.0_91/jre/lib/ext/jfxrt.jar"))
+
+
 //-----------------------------------------------------------------------------------------------------
 
-scalacOptions += "-Ylog-classpath"
 val scalav = "2.11.8"
 
 libraryDependencies ++= {

@@ -1,17 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
 
-<VBox alignment="TOP_LEFT" maxHeight="-Infinity" minHeight="300.0" minWidth="400.0" prefHeight="417.0" prefWidth="450.0" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/2.2" fx:controller="remoting.SimplePresenter">
+<VBox alignment="TOP_LEFT" maxHeight="-Infinity" minHeight="300.0" minWidth="400.0" prefHeight="417.0" prefWidth="450.0" xmlns="http://javafx.com/javafx/8.0.102-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="remoting.SimplePresenter">
   <children>
     <AnchorPane id="Content" minHeight="80.0" minWidth="0.0" prefHeight="417.0" prefWidth="399.0" style="-fx-background-color: #555555;">
       <children>
         <TitledPane alignment="TOP_LEFT" animated="false" collapsible="false" contentDisplay="LEFT" graphicTextGap="4.0" minHeight="14.0" minWidth="400.0" opacity="1.0" prefHeight="417.0" prefWidth="450.0" text="Chatastrophe" underline="false" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
           <content>
-            <Button alignment="TOP_RIGHT" contentDisplay="RIGHT" minHeight="19.0" mnemonicParsing="false" onAction="#onClose" prefHeight="19.0" prefWidth="59.0" scaleZ="1.0" text="Close" translateZ="0.0" underline="false" />
+            <Button alignment="TOP_RIGHT" contentDisplay="RIGHT" layoutX="20.0" layoutY="-100.0" minHeight="19.0" mnemonicParsing="false" onAction="#onClose" prefHeight="19.0" prefWidth="59.0" scaleZ="1.0" text="Close" translateZ="0.0" underline="false" />
           </content>
         </TitledPane>
         <TextArea fx:id="msgArea" editable="false" prefHeight="309.0" prefWidth="427.0" wrapText="true" AnchorPane.bottomAnchor="72.0" AnchorPane.leftAnchor="9.0" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="36.0" />
