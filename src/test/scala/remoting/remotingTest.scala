@@ -30,15 +30,11 @@ import akka.actor._
 class SetSuite extends FunSuite {
   remoteInit.init   // Start the server actor
 
-  val x = System.getenv("JAVA_HOME")
-  println(s"JAVA_HOME = ${x}")
-  readLine
-
   import com.typesafe.config.ConfigFactory                                          // NEEDED FOR TEST ON LOCAL MACHINE
   val system = ActorSystem("localActorSystem", ConfigFactory.load("client"))        // NEEDED FOR TEST ON LOCAL MACHINE
 
-  val localActor = system.actorOf(localA.props, name="localActr")                 // Start the client
-  localActor ! Join("127.0.0.1:2552", "Junkrat")                                  // Connect
+  val localActor = system.actorOf(LocalA.props, name="localActr")                 // Start the client
+  //localActor ! Join("127.0.0.1:2552", "Junkrat")                                  // Connect
 
   val GUI = new GUIscalaFXinitializer(localActor, system)  // ScalaFX implementation with ScalaFXML
   GUI.main(Array(""))
@@ -46,14 +42,10 @@ class SetSuite extends FunSuite {
   // Already works, working on to GUI integration now.
   /*
   val userName = "Hugo"
-
   localActor ! Join("127.0.0.1:2552", userName)
   localActor ! SendMessage("Pretty Awesome stuff")  // send first message to server
-
   localActor ! Join("127.0.0.1:2552", "Hugo2")  // Try joining from the same client a second time... (should do nothing)
-
   localActor ! SendMessage("yea we are on a rolll") // send second message
-
   localActor ! Disconnect(userName)
 */
 }
