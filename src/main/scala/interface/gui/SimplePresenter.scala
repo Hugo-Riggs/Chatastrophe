@@ -1,4 +1,4 @@
-package remoting
+package interface.gui 
 
 /*
 * In this file, scalaFxml(https://github.com/vigoo/scalafxml) finds
@@ -13,7 +13,11 @@ import scalafxml.core.macros.sfxml
 import akka.actor.{Actor, ActorRef, ActorSystem, DeadLetter, Inbox, PoisonPill, Props}
 import scalafx.application.Platform
 import scalafx.scene.input.{KeyCode, KeyEvent}
-
+import remoting.CommunicationProtocol._
+import akka.util.Timeout
+import scala.concurrent.duration._
+import scala.concurrent.{ ExecutionContext, Future, Promise }
+import remoting.GuiToClientMediator
 
 @sfxml
 class SimplePresenter (
@@ -26,9 +30,7 @@ class SimplePresenter (
                           private val clientActor: ActorRef
                      ) {
 
-  import akka.util.Timeout
-  import scala.concurrent.duration._
-  import scala.concurrent.{ ExecutionContext, Future, Promise }
+
 
   implicit val ec = ExecutionContext.global
   implicit val timeout = Timeout(30 seconds)
@@ -71,6 +73,7 @@ class SimplePresenter (
   def replaceNewLines(str: String): String = str.replaceAll("[\\n]","")
 
 
+
   def onSend(event: ActionEvent) {
 
     val msg = replaceNewLines(ourMessage.text.value)
@@ -102,7 +105,7 @@ class SimplePresenter (
 
 
   def onJoin(event: ActionEvent): Unit = {
-      i send(clientActor, Connect(ip.text.value+":"+port.text.value, name.text.value, clientActor))
+            i send(clientActor, Connect(ip.text.value+":"+port.text.value, name.text.value, clientActor))
   }
 
 

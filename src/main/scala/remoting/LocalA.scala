@@ -1,40 +1,18 @@
 package remoting
 
-/*
-* The Client
-* when client actor receives a send message, it tells the server to receive that message.
-* First a Connect on the server must be preformed.
+/***
+ * Local actor (LocalA) an akka actor.
+ * When LocalA receives a send message, it tells the remote actor (server) to receive that message.
+ *
+ * This class and companion object hold state data on the connection including an actor reference to
+ * the server actor.
+ *
+ * TODO: implement a communication protocol as a sealed abstract class, extended to various case classes.
  */
 
 import akka.actor._
 import scala.language.postfixOps
 
-// A main class to load the client side.
-object Client extends App {
-  require(args.length == 2, "Client address:port userName")
-
-  val addressPort = args(0)
-  val userName = args(1)
-
-  remoteInit.init   // Start the server actor
-
-  import com.typesafe.config.ConfigFactory                                          // NEEDED FOR TEST ON LOCAL MACHINE
-  val system = ActorSystem("localActorSystem", ConfigFactory.load("client"))        // NEEDED FOR TEST ON LOCAL MACHINE
-
-  val localActor = system.actorOf(LocalA.props, name="localActr")                 // Start the client
-  localActor ! Connect(addressPort, userName, localActor)                                        // Connect
-
-  def getInput(line: String): Unit = {
-    if(line == "quit")
-      localActor ! Disconnect(userName) 
-    else{
-      localActor ! SendMessage(line)
-      getInput(readLine)
-    }
-  }
-
-  getInput(readLine)
-}
 
 // The local actor facilitates communication with the server.
 object LocalA {
@@ -55,6 +33,7 @@ class LocalA extends Actor {
 
   import LocalA._
   import GuiToClientMediator.{PassMediator, PassGUIsysActr}
+  import CommunicationProtocol._
 
   def receive = {
     case Connect(addressPort, withName, self) if server.isEmpty =>

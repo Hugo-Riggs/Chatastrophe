@@ -1,51 +1,54 @@
-name := "chatastrophe"
-
-version := "1.0"
+import NativePackagerHelper._
 
 scalaVersion := "2.11.8"
 
-//-----------------------------------------------------------------------------------------------------
-// SBT Setup for GUI
-resolvers += Resolver.sonatypeRepo("releases")
-addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
-
-// fix for modena style sheet not found
-unmanagedJars in Compile += {
-  val ps = new sys.SystemProperties
-  Attributed.blank(file(baseDirectory.value.toString) / "/lib/ext/jfxrt.jar")
-}
-//-----------------------------------------------------------------------------------------------------
 
 libraryDependencies ++= {
   Seq(
-  "com.typesafe.akka" %% "akka-actor" % "2.4.8",
-  "com.typesafe.akka" %% "akka-agent" % "2.4.8",
-  "com.typesafe.akka" %% "akka-camel" % "2.4.8",
-  "com.typesafe.akka" %% "akka-cluster" % "2.4.8",
-  "com.typesafe.akka" %% "akka-cluster-metrics" % "2.4.8",
-  "com.typesafe.akka" %% "akka-cluster-sharding" % "2.4.8",
-  "com.typesafe.akka" %% "akka-cluster-tools" % "2.4.8",
-  "com.typesafe.akka" %% "akka-contrib" % "2.4.8",
-  "com.typesafe.akka" %% "akka-http-core" % "2.4.8",
-  "com.typesafe.akka" %% "akka-http-testkit" % "2.4.8",
-  "com.typesafe.akka" %% "akka-multi-node-testkit" % "2.4.8",
-  "com.typesafe.akka" %% "akka-osgi" % "2.4.8",
-  "com.typesafe.akka" %% "akka-persistence" % "2.4.8",
-  "com.typesafe.akka" %% "akka-persistence-tck" % "2.4.8",
-  "com.typesafe.akka" %% "akka-remote" % "2.4.8",
-  "com.typesafe.akka" %% "akka-slf4j" % "2.4.8",
-  "com.typesafe.akka" %% "akka-stream" % "2.4.8",
-  "com.typesafe.akka" %% "akka-stream-testkit" % "2.4.8",
-  "com.typesafe.akka" %% "akka-testkit" % "2.4.8",
-  "com.typesafe.akka" %% "akka-distributed-data-experimental" % "2.4.8",
-  "com.typesafe.akka" %% "akka-typed-experimental" % "2.4.8",
-  "com.typesafe.akka" %% "akka-http-experimental" % "2.4.8",
-  "com.typesafe.akka" %% "akka-http-jackson-experimental" % "2.4.8",
-  "com.typesafe.akka" %% "akka-http-spray-json-experimental" % "2.4.8",
-  "com.typesafe.akka" %% "akka-http-xml-experimental" % "2.4.8",
-  "com.typesafe.akka" %% "akka-persistence-query-experimental" % "2.4.8",
-  "org.scala-lang" % "scala-reflect" % "2.11.8",
-  "org.scalafx" %% "scalafx" % "8.0.92-R10",
-  "org.scalafx" %% "scalafxml-core-sfx8" % "0.2.2"
+    "com.typesafe.akka" %% "akka-actor" % "2.4.10",
+    "com.typesafe.akka" %% "akka-remote" % "2.4.10",
+    "org.scala-lang" % "scala-reflect" % "2.11.8",
+    "org.scalafx" %% "scalafx" % "8.0.102-R11",
+    "org.scalafx" %% "scalafxml-core-sfx8" % "0.2.2"
   )
 }
+
+enablePlugins(JavaServerAppPackaging)
+
+lazy val commonSettings = Seq( 
+    name := "chatastrophe",
+    version := "0.0.1",
+    connectInput in run := true
+  )
+
+
+lazy val root = (project in file(".")).
+  settings(commonSettings: _*)
+
+
+// SBT Setup for non-gui 
+lazy val client = (project in file("client")).
+  settings(commonSettings: _*).
+  settings(
+    mainClass in (Compile) := Some("remoting.Client")
+  )
+
+
+// Macros allow scalafxml to generate classes (use scene builder generated fxml files)
+addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
+
+//Define the java version to use
+javacOptions ++= Seq("-source", "1.8", "-target", "1.8")
+
+//Add Javafx8 library
+unmanagedJars in Compile += file( "lib/ext/jfxrt.jar" )
+
+jfxSettings
+
+
+lazy val guiClient = (project in file("guiClient")).
+  settings(commonSettings: _*).
+  settings( 
+    JFX.mainClass := Some("remoting.ClientWithGui")
+  )
+

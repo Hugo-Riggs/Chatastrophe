@@ -3,14 +3,19 @@ package remoting
 import akka.actor.{Actor, ActorRef, PoisonPill, Props}
 
 
-/*
+/***
 * The mediator actor passes messages between
 * the underlying client and the GUI. It makes
 * use of a Locked and Unlocked set of states.
 * All blocking occurs on this actor which
 * allows un-interrupted use of the GUI and client.
 */
+
 object GuiToClientMediator {
+  
+  var client = List.empty[ActorRef]
+  var gui = List.empty[ActorRef]
+
   case class PassMediator(mediator: ActorRef)
   case class PassGUIsysActr(g: ActorRef)
   case class PassClientActor(c: ActorRef)
@@ -24,10 +29,10 @@ object GuiToClientMediator {
 }
 
 class GuiToClientMediator extends Actor {
+
+  import CommunicationProtocol.ReceiveMessage
   import GuiToClientMediator._
   import context._
-  var client = List.empty[ActorRef]
-  var gui = List.empty[ActorRef]
 
   // Become with Receive states, enable FSM
   def Unlocked: Receive = {

@@ -1,4 +1,4 @@
-package remoting
+package interface.gui 
 
 // Here some java dependencies are included for GUI behavior
 //import javaGuiDependencies._
@@ -20,6 +20,7 @@ class GUIscalaFXinitializer(actorRef: ActorRef, sys: ActorSystem) extends JFXApp
     new DependenciesByType(Map(
       typeOf[ActorRef] -> actorRef,
       typeOf[ActorSystem] -> sys)))
+
   // Call the JavaFX main function, launching the gui
   stage = new JFXApp.PrimaryStage {
     scene = new Scene(root)
