@@ -7,7 +7,7 @@ package interface
 import akka.actor._
 import scala.language.postfixOps
 
-object ClientWithGUIGui extends App {
+object ClientWithGUI extends App {
 
   import com.typesafe.config.ConfigFactory                                          // NEEDED FOR TEST ON LOCAL MACHINE
   val system = ActorSystem("localActorSystem", ConfigFactory.load("client"))        // NEEDED FOR TEST ON LOCAL MACHINE

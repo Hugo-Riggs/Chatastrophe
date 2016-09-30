@@ -15,8 +15,15 @@ import akka.actor._
 
 class GUIscalaFXinitializer(actorRef: ActorRef, sys: ActorSystem) extends JFXApp {
 
+  try {
+  println("CLASS " + getClass.getClassLoader.getResource("clientGUI.fxml"))
+  } catch {
+    case ex: Exception => println(ex)
+    System.exit(0);
+  }
+
   // Load SceneBuilder generated Graphical User Interface markdown code
-  val root = FXMLView(getClass.getResource("clientGUI.fxml"),
+  val root = FXMLView(getClass.getClassLoader.getResource("clientGUI.fxml"),
     new DependenciesByType(Map(
       typeOf[ActorRef] -> actorRef,
       typeOf[ActorSystem] -> sys)))

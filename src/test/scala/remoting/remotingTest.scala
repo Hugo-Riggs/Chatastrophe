@@ -25,10 +25,10 @@ package remoting
 
 import org.scalatest.FunSuite
 import akka.actor._
+import interface.gui.GUIscalaFXinitializer
 
 
 class SetSuite extends FunSuite {
-  remoteInit.init   // Start the server actor
 
   import com.typesafe.config.ConfigFactory                                          // NEEDED FOR TEST ON LOCAL MACHINE
   val system = ActorSystem("localActorSystem", ConfigFactory.load("client"))        // NEEDED FOR TEST ON LOCAL MACHINE
