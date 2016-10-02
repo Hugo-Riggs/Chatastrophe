@@ -1,7 +1,6 @@
 package remoting
 
 
-// Communication protocol
 object CommunicationProtocol {
 
   sealed abstract class Comms

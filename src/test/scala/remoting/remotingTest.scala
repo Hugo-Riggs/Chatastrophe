@@ -25,27 +25,36 @@ package remoting
 
 import org.scalatest.FunSuite
 import akka.actor._
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 import interface.gui.GUIscalaFXinitializer
+import interface._
+import remoting._
+
 
 
 class SetSuite extends FunSuite {
+
+    val context = ActorSystem("ChatastropheRemoteActorSys")
+    val remoteActor = context.actorOf(RemoteA.props, "remoteActor")
 
   import com.typesafe.config.ConfigFactory                                          // NEEDED FOR TEST ON LOCAL MACHINE
   val system = ActorSystem("localActorSystem", ConfigFactory.load("client"))        // NEEDED FOR TEST ON LOCAL MACHINE
 
   val localActor = system.actorOf(LocalA.props, name="localActr")                 // Start the client
-  //localActor ! Join("127.0.0.1:2552", "Junkrat")                                  // Connect
 
-  val GUI = new GUIscalaFXinitializer(localActor, system)  // ScalaFX implementation with ScalaFXML
-  GUI.main(Array(""))
+  //val GUI = new GUIscalaFXinitializer(localActor, system)  // ScalaFX implementation with ScalaFXML
+  //GUI.main(Array(""))
 
   // Already works, working on to GUI integration now.
-  /*
-  val userName = "Hugo"
-  localActor ! Join("127.0.0.1:2552", userName)
+  import remoting.CommunicationProtocol._ 
+  localActor ! Connect("127.0.0.1:2552", "Junkrat", localActor)
+  localActor ! Connect("127.0.0.1:2552", "Junkrat", localActor)
+
   localActor ! SendMessage("Pretty Awesome stuff")  // send first message to server
-  localActor ! Join("127.0.0.1:2552", "Hugo2")  // Try joining from the same client a second time... (should do nothing)
+  localActor ! Connect("127.0.0.1:2552", "Hugo2", localActor)  // Try joining from the same client a second time... (should do nothing)
   localActor ! SendMessage("yea we are on a rolll") // send second message
-  localActor ! Disconnect(userName)
-*/
+  //localActor ! Disconnect(userName)
+
 }

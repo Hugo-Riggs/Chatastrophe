@@ -7,14 +7,14 @@ package remoting
  * This class and companion object hold state data on the connection including an actor reference to
  * the server actor.
  *
- * TODO: implement a communication protocol as a sealed abstract class, extended to various case classes.
+ * TODO: include communication protocol in receive matching
  */
 
 import akka.actor._
 import scala.language.postfixOps
 
 
-// The local actor facilitates communication with the server.
+// The local actor facilitates communication with the server actor.
 object LocalA {
 
   val remoteActorSysStr = "akka.tcp://ChatastropheRemoteActorSys@"
@@ -44,12 +44,11 @@ class LocalA extends Actor {
 
     case SendMessage(text) =>
       if (server.nonEmpty)
-        server.head ! ReceiveMessage(s"${text}\n")
+        server.head ! ReceiveMessage(s"${ourName}: ${text}\n")
       else
         println("First join the server.")
 
     case ReceiveMessage(text) =>
-      println("received " + text)
       if(guiM.nonEmpty) 
         guiM.head ! GuiToClientMediator.Message(text) 
       else 
@@ -63,16 +62,16 @@ class LocalA extends Actor {
       else
         println("Not currently connected to any server.")
 
-      if(guiM.nonEmpty) guiM.head ! "Kill"
+      if (guiM nonEmpty) guiM.head ! "Kill"
 
       guiM = List.empty[ActorRef]
       self ! PoisonPill
 
     case Poll =>
-      if(server.nonEmpty) server.head ! Poll else println("SERVER NOT SET")
+      if(server.nonEmpty) server.head ! Poll else println("Server not set")
 
     case DeadLetter(msg, from, to) =>
-      println("RECEIVED DEAD LETTER LocalA")
+      println("Received dead letter LocalA")
       // These cases could have some useful implementation purposes
       // However right now they are not very functional in this program.
     case GUI_Request =>
@@ -82,7 +81,7 @@ class LocalA extends Actor {
       gui = List(actorRef)
       sender ! "OK"
 
-    case GuiToClientMediator.Waiting => println("CLIENT RECEIVED WAITING")
+    case GuiToClientMediator.Waiting => println("Client received waiting")
 
     case PassMediator(m) => guiM = List(m)
 

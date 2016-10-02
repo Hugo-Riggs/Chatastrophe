@@ -9,6 +9,7 @@ import akka.actor.{Actor, ActorRef, PoisonPill, Props}
 * use of a Locked and Unlocked set of states.
 * All blocking occurs on this actor which
 * allows un-interrupted use of the GUI and client.
+* Hugo Riggs
 */
 
 object GuiToClientMediator {
@@ -34,42 +35,43 @@ class GuiToClientMediator extends Actor {
   import GuiToClientMediator._
   import context._
 
-  // Become with Receive states, enable FSM
+
+  // Use of akka's `become` with different `Receive` states, enable a FSM
   def Unlocked: Receive = {
     case command: MediatorCommand => command match {
       case LockMediator => become(Locked)
-      case UnlockMediator => println("MEDIATOR ALREADY UNLOCKED")
-      case Waiting => println("MEDIATOR WAS UNLOCKED WHEN IT RECEIVED Waiting")
-      case Message(msg) => println("MEDIATOR DID NOT RECEIVE MESSAGE IN LOCKED STATE: " + msg)
+      case UnlockMediator => println("Mediator already unlocked.")
+      case Waiting => println("Mediator was unlocked when it received Waiting.")
+      case Message(msg) => println("Mediator did not receive message in locked state: " + msg)
     }
     case "Kill" =>
-      System.console.printf("MEDIATOR RECEIVED KILL SIGNAL WHILE UNLOCKED" )
-      System.exit(1)
-      gui(0) ! PoisonPill // Kill GUI's actor
+      System.console.printf("Mediator received kill signal while unlocked" )
+      //System.exit(1) TODO these system exit's got commented out see if this works.
+      gui.head ! PoisonPill // Kill GUI's actor
       self ! PoisonPill
-    case _ => println("UNKOWN MESSAGE IN MEDIATOR UNLOCKED STATE")
+    case _ => println("Unknown message in mediator unlocked state")
   }
 
   def Locked: Receive = {
     case command: MediatorCommand => command match {
-      case LockMediator => println("MEDIATOR ALREADY LOCKED")
+      case LockMediator => println("Mediator already locked")
       case UnlockMediator => become(Unlocked)
-      case Message(msg) => gui(0) ! ReceiveMessage(msg); self ! UnlockMediator
-      case Waiting => client(0) ! Waiting
+      case Message(msg) => gui.head ! ReceiveMessage(msg); self ! UnlockMediator
+      case Waiting => client.head ! Waiting
     }
     case "Kill" =>
-      println("MEDIATOR RECEIVED KILL SIGNAL WHILE LOCKED" )
-      System.exit(1)
-      gui(0) ! PoisonPill // Kill GUI's actor
+      println("Mediator received kill signal while locked" )
+      //System.exit(1) TODO see prev
+      gui.head ! PoisonPill // Kill GUI's actor
       self ! PoisonPill
-    case x: Any => println("UNKOWN MESSAGE IN MEDIATOR LOCKED STATE " + x)
+    case x: Any => println("Unkown message in mediator locked state " + x)
   }
   // end of simple two state machine
 
   def receive: Receive = {
-    case PassClientActor(c) => client = List(c)
-    case PassGUIsysActr(g) => gui = List(g)
+    case PassClientActor(c) =>  client = List(c) //client = List(c)  c :: client
+    case PassGUIsysActr(g) => gui = List(g)  // g :: gui
     case LockMediator => become(Locked)
-    case _ => println("UNKOWN MESSAGE IN MEDIATOR")
+    case _ => println("Unkown message in mediator")
   }
 }

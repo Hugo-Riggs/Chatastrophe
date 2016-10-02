@@ -1,6 +1,5 @@
 package interface
 
-
 import akka.actor._
 import scala.language.postfixOps
 

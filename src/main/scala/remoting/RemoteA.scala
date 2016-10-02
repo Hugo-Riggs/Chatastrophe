@@ -67,11 +67,18 @@ class RemoteA extends Actor {
     case com: Comms => com match {
 
       case SendMessage(text) =>
-        println(""); // TODO: Refactor RemoteCommand sealed abstract class, send message is pointlessly included, but it is nice to have it included at the same time.
+        println("") 
 
       case Connect(address, user, actorRef) =>  // A user joins 
-        connections += user -> actorRef
-        self ! ReceiveMessage("user: " + user + " joined.\n")
+        connections get user match { 
+            case Some(s) => 
+              println("Repated User Trying to Connect")
+              actorRef ! "user already exists in channel" 
+              actorRef ! PoisonPill
+            case None =>
+              connections += user -> actorRef
+              self ! ReceiveMessage("user: " + user + " joined.\n")
+            }
 
       case ReceiveMessage(text) => // A user sent a message to the server
         logActor ! WriteToLog(text)
@@ -96,14 +103,14 @@ class RemoteA extends Actor {
             }
         }
 
-      case BroadcastIncoming(text) =>  // Push all incoming messages out to each client.
+      case BroadcastIncoming(text) =>  // Fan incoming messages to all clients. 
         connections foreach {
           client =>
             val(user, actorRef) = client 
             actorRef ! ReceiveMessage(text)
         }
 
-      case Poll => {  // Same as Broadcast except it only sends to one other.
+      case Poll => {  // Send chat log to single client. TODO: do on join.
         val f = (logActor ? ReadFromLog).mapTo[String]
         val p = Promise[String]()
         p completeWith f

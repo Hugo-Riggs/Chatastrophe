@@ -18,13 +18,13 @@ lazy val commonSettings = Seq(
 )
 
 
-lazy val serverPackage = project
+lazy val clientCliPackage = project
   .in(file("."))
   .enablePlugins(JavaServerAppPackaging)
   .settings(commonSettings: _*)
   .settings(
-    name := "chatastrophe-server",
+    name := "chatastrophe-client",
     version := "0.0.1",
     connectInput in run := true,
-    mainClass in Compile := Some("interface.ServerCLI")
+    mainClass in Compile := Some("interface.ClientWithCLI")
   )
