@@ -7,7 +7,10 @@ package remoting
  * This class and companion object hold state data on the connection including an actor reference to
  * the server actor.
  *
- * TODO: include communication protocol in receive matching
+ * @TODO: include communication protocol in receive matching
+ * @TODO figure out this issue of non aligning text echoing
+ * @TODO Consider removing user name from local actor as we will implement its use more in interface. 
+ * 
  */
 
 import akka.actor._
@@ -24,6 +27,9 @@ object LocalA {
   var guiM = List.empty[ActorRef]
   var ourName = ""
   var logReceived = ""
+  var ourLastMessage = ""
+
+  def prepString(s: String): String = (s.trim) + "\n"
 
   def props: Props = Props(new LocalA)
 }
@@ -37,22 +43,28 @@ class LocalA extends Actor {
 
   def receive = {
     case Connect(addressPort, withName, self) if server.isEmpty =>
-      ourName=withName
+      //ourName=withName
       server = 
         List(context.actorSelection(remoteActorSysStr+addressPort+remoteActorRefStr))
       server.head ! Connect(addressPort, withName, self)
 
-    case SendMessage(text) =>
-      if (server.nonEmpty)
-        server.head ! ReceiveMessage(s"${ourName}: ${text}\n")
+    case SendMessage(s) =>
+      if (server.nonEmpty){
+        val s1 = prepString( s )
+        ourLastMessage = s1 
+        server.head ! ReceiveMessage( s1 )  // ${ourName}: 
+      }
       else
         println("First join the server.")
 
-    case ReceiveMessage(text) =>
-      if(guiM.nonEmpty) 
-        guiM.head ! GuiToClientMediator.Message(text) 
-      else 
-        println(text)
+    case ReceiveMessage( s2 ) =>
+      if(s2 != ourLastMessage){
+        val s3 = prepString( s2 )
+        if(guiM.nonEmpty) 
+          guiM.head ! GuiToClientMediator.Message( s3 ) 
+        else 
+          print( s3 ) // or send back to interface for printing
+      }
 
     case Disconnect(name) =>
       if(server.nonEmpty){
@@ -68,10 +80,11 @@ class LocalA extends Actor {
       self ! PoisonPill
 
     case Poll =>
-      if(server.nonEmpty) server.head ! Poll else println("Server not set")
+      if( server nonEmpty ) server.head ! Poll else println("Server not set")
 
     case DeadLetter(msg, from, to) =>
       println("Received dead letter LocalA")
+
       // These cases could have some useful implementation purposes
       // However right now they are not very functional in this program.
     case GUI_Request =>

@@ -22,7 +22,7 @@ class LogActor extends Actor {
 
   private var log: String = ""
 
-  private def write(text: String): Unit =  log += text + "\n"
+  private def write(text: String): Unit =  log += text
 
   def receive = {
     case WriteToLog(text) => write(text)
@@ -66,18 +66,25 @@ class RemoteA extends Actor {
 
     case com: Comms => com match {
 
-      case SendMessage(text) =>
+      case SendMessage(text) =>         // TellServer(str: String)
         println("") 
 
       case Connect(address, user, actorRef) =>  // A user joins 
         connections get user match { 
             case Some(s) => 
-              println("Repated User Trying to Connect")
-              actorRef ! "user already exists in channel" 
+              actorRef ! ReceiveMessage("user already exists in channel\n") 
               actorRef ! PoisonPill
             case None =>
-              connections += user -> actorRef
-              self ! ReceiveMessage("user: " + user + " joined.\n")
+              connections += user -> actorRef  // add user to list of connected
+              actorRef ! Poll  // send new client the chat messages in the channel
+              val f = (logActor ? ReadFromLog).mapTo[String]
+              val p = Promise[String]()
+              p completeWith f
+              p.future onSuccess {
+                case s => actorRef ! ReceiveMessage( s )
+                self ! ReceiveMessage("user: " + user + " joined.")
+                actorRef ! ReceiveMessage("Hello " + user + " welcome to a Chatastrophe chat.")
+              }
             }
 
       case ReceiveMessage(text) => // A user sent a message to the server
@@ -86,7 +93,7 @@ class RemoteA extends Actor {
 
       case Disconnect(user) =>    //  Signal received from a client when they wish to disconnect from the server.
         connections -= user
-        self ! ReceiveMessage("user " + user + " disconneccted")
+        self ! ReceiveMessage("user " + user + " disconneccted\n")
     }
 
     case command: RemoteCommand => command match {
@@ -105,12 +112,12 @@ class RemoteA extends Actor {
 
       case BroadcastIncoming(text) =>  // Fan incoming messages to all clients. 
         connections foreach {
-          client =>
+          client  =>
             val(user, actorRef) = client 
             actorRef ! ReceiveMessage(text)
         }
 
-      case Poll => {  // Send chat log to single client. TODO: do on join.
+      case Poll => {  // Send chat log to single client.
         val f = (logActor ? ReadFromLog).mapTo[String]
         val p = Promise[String]()
         p completeWith f
@@ -126,7 +133,7 @@ class RemoteA extends Actor {
 
     // For messages outside of protocols
     case DeadLetter(msg, from, to) =>
-      println("RECEIVED DEAD LETTER LocalA")
+      println("Received dead letter LocalA")
 
     case any: Any => println("received " + any); sender ! ReceiveMessage("unsupported message (" + any + ")")
   }

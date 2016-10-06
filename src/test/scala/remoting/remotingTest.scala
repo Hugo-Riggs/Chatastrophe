@@ -36,25 +36,46 @@ import remoting._
 
 class SetSuite extends FunSuite {
 
-    val context = ActorSystem("ChatastropheRemoteActorSys")
-    val remoteActor = context.actorOf(RemoteA.props, "remoteActor")
+  val client = ClientWithCLI
+  client.main(_)
 
-  import com.typesafe.config.ConfigFactory                                          // NEEDED FOR TEST ON LOCAL MACHINE
-  val system = ActorSystem("localActorSystem", ConfigFactory.load("client"))        // NEEDED FOR TEST ON LOCAL MACHINE
+  //val context = ActorSystem("ChatastropheRemoteActorSys")
+  //val remoteActor = context.actorOf(RemoteA.props, "remoteActor")
 
-  val localActor = system.actorOf(LocalA.props, name="localActr")                 // Start the client
+//  import com.typesafe.config.ConfigFactory                                          // NEEDED FOR TEST ON LOCAL MACHINE
+//  val system = ActorSystem("localActorSystem", ConfigFactory.load("client"))        // NEEDED FOR TEST ON LOCAL MACHINE
+//
+//  val localActor = system.actorOf(LocalA.props, name="localActr")                 // Start the client
+//
+////  val GUI = new GUIscalaFXinitializer(localActor, system)  // ScalaFX implementation with ScalaFXML
+////  GUI.main(Array("")) // Problem instantiating class, it extends JfxApp
+//
+//  // Already works, working on to GUI integration now.
+//  import remoting.CommunicationProtocol._ 
+//  localActor ! Connect("127.0.0.1:2552", "Junkrat", localActor)
+////  localActor ! Connect("127.0.0.1:2552", "hugo", localActor)
+//
+//  localActor ! SendMessage("Pretty Awesome stuff")  // send first message to server
+//
+////  localActor ! Connect("127.0.0.1:2552", "Hugo2", localActor)  // Try joining from the same client a second time... (should do nothing)
+//  localActor ! SendMessage("yea we are on a rolll") // send second message
+//  //localActor ! Disconnect(userName)
+//
+//  readLine
 
-  //val GUI = new GUIscalaFXinitializer(localActor, system)  // ScalaFX implementation with ScalaFXML
-  //GUI.main(Array(""))
-
-  // Already works, working on to GUI integration now.
-  import remoting.CommunicationProtocol._ 
-  localActor ! Connect("127.0.0.1:2552", "Junkrat", localActor)
-  localActor ! Connect("127.0.0.1:2552", "Junkrat", localActor)
-
-  localActor ! SendMessage("Pretty Awesome stuff")  // send first message to server
-  localActor ! Connect("127.0.0.1:2552", "Hugo2", localActor)  // Try joining from the same client a second time... (should do nothing)
-  localActor ! SendMessage("yea we are on a rolll") // send second message
-  //localActor ! Disconnect(userName)
+  // Get the systems console
+//  val standardIn = System.console()
+//
+//  def getInput(line: String): Unit = {
+//    if(line == "exit")
+//      //localActor ! Disconnect(userName) 
+//    ""
+//    else{
+//      //localActor ! SendMessage(line)
+//      getInput(standardIn.readPassword() mkString)
+//    }
+//  }
+//
+//  getInput("")
 
 }

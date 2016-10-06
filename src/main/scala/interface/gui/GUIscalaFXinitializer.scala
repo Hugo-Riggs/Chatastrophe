@@ -1,7 +1,5 @@
 package interface.gui 
 
-// Here some java dependencies are included for GUI behavior
-//import javaGuiDependencies._
 import javafx.event.EventHandler
 import javafx.scene.input.MouseEvent
 import javafx.stage.StageStyle
@@ -16,9 +14,10 @@ import akka.actor._
 class GUIscalaFXinitializer(actorRef: ActorRef, sys: ActorSystem) extends JFXApp {
 
   try {
+    println("In gui initializer")
   println("CLASS " + getClass.getClassLoader.getResource("clientGUI.fxml"))
   } catch {
-    case ex: Exception => println(ex)
+    case ex: Exception => println(ex + " Unable to load FXML")
     System.exit(0);
   }
 
@@ -64,8 +63,5 @@ class GUIscalaFXinitializer(actorRef: ActorRef, sys: ActorSystem) extends JFXApp
       yOffset = stage.getY - event.getScreenY;
     }
   })
-
-  // Imported Java class allows UNDECORATED stage to be resized.
- // ResizeHelper.addResizeListener(stage)
 
 }

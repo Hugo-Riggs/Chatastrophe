@@ -2,11 +2,14 @@ package interface
 
 import akka.actor._
 import scala.language.postfixOps
+import scala.sys.process._
 
 
 // A main class to load the client side.
 object ClientWithCLI extends App {
   require(args.length == 2, "usage: ClientWithCLI userName address:port\n two arguments required")
+
+
 
   val userName = args(0)
   val addressPort = args(1) 
@@ -20,17 +23,36 @@ object ClientWithCLI extends App {
 
   // Connect
   localActor ! remoting.CommunicationProtocol.Connect(addressPort, userName, localActor)                                        
-
-  // Communication loop
+  
+  // Start communication loop
   import remoting.CommunicationProtocol.{Disconnect, SendMessage}
+
+ /* // Get the systems console
+  val standardIn = System.console()
+
   def getInput(line: String): Unit = {
     if(line == "exit")
       localActor ! Disconnect(userName) 
     else{
       localActor ! SendMessage(line)
-      getInput(readLine)
+      val nextMessage: String = standardIn.readPassword() mkString;
+      getInput(nextMessage)
     }
   }
 
-  getInput(readLine)
+  getInput("")*/
+
+
+  def unixCommand(s: String*): String = s.!!
+
+  unixCommand("clear")
+
+  for (ln <- io.Source.stdin.getLines){
+    if (ln == "exit") 
+      localActor ! Disconnect(userName)
+    else 
+      localActor ! SendMessage( userName + ": " + ln )
+  }
+  
+
 }
