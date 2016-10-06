@@ -76,14 +76,13 @@ class RemoteA extends Actor {
               actorRef ! PoisonPill
             case None =>
               connections += user -> actorRef  // add user to list of connected
-              actorRef ! Poll  // send new client the chat messages in the channel
+              actorRef ! ReceiveMessage( "============================================\n\\ Hello " + user + " welcome to a Chatastrophe chat \\ \n ============================================\n")
               val f = (logActor ? ReadFromLog).mapTo[String]
               val p = Promise[String]()
               p completeWith f
               p.future onSuccess {
                 case s => actorRef ! ReceiveMessage( s )
                 self ! ReceiveMessage("user: " + user + " joined.")
-                actorRef ! ReceiveMessage("Hello " + user + " welcome to a Chatastrophe chat.")
               }
             }
 
