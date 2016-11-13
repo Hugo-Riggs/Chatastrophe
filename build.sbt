@@ -9,7 +9,7 @@ lazy val commonSettings = Seq(
       Seq(
         "com.typesafe.akka" %% "akka-actor" % "2.4.10",
         "com.typesafe.akka" %% "akka-remote" % "2.4.10",
-        "ort.scala-lang" % "scala-reflect" % "2.11.8",
+        "org.scala-lang" % "scala-reflect" % "2.11.8",
         "org.scalafx" %% "scalafx" % "8.0.102-R11",
         "org.scalafx" %% "scalafxml-core-sfx8" % "0.2.2",
         "org.scalatest" %% "scalatest" % "3.0.0" % "test"

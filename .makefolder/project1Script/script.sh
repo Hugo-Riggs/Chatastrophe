@@ -13,11 +13,3 @@ cd ../../
 
 echo "compile bin"
 sbt universal:packageBin
-
-
-#rm ../../../build.sbt
-#echo "$(cat proj)" >  ../../build.sbt
-#cd ../../
-#sbt universal:packageBin
-#cd $pwd 
-#rm ../../build.sbt

@@ -31,7 +31,7 @@ class SimplePresenter (
                      ) {
 
 
-
+  private var displayName = name.text.value
   implicit val ec = ExecutionContext.global
   implicit val timeout = Timeout(30 seconds)
 
@@ -70,29 +70,30 @@ class SimplePresenter (
   def isAppropriateFormat(str: String): Boolean =  str.length > 0 && !str.matches("[ ]+")
 
 
-  def replaceNewLines(str: String): String = str.replaceAll("[\\n]","")
+  def removeNewLines(str: String): String = str.replaceAll("[\\n]","")
 
-
-
-  def onSend(event: ActionEvent) {
-
-    val msg = replaceNewLines(ourMessage.text.value)
-
-    if(isAppropriateFormat(msg)){
-      i send(clientActor, SendMessage(msg))
-      ourMessage.text = ""
-    }
+  def sendF(msg: String): Unit = {
+    i send(clientActor, SendMessage(msg))
+    msgArea.appendText(displayName+": "+msg+"\n")
+    ourMessage.text = ""
   }
 
+  // Sending a message by pressing the button with mouse click
+  def onSend(event: ActionEvent) {
 
+    val msg = removeNewLines(ourMessage.text.value)
+
+    if(isAppropriateFormat(msg))
+      sendF(msg)
+  }
+
+  /// Sending a message by pressing enter
   def onSendEnter(event: KeyEvent): Unit = {
-    val msg = replaceNewLines(ourMessage.text.value)
+    val msg = removeNewLines(ourMessage.text.value)
 
     if(event.getCode.getName==KeyCode.Enter.getName)
-     if(isAppropriateFormat(msg)){
-      i send(clientActor, SendMessage(msg))
-      ourMessage.text = ""
-    }
+     if(isAppropriateFormat(msg))
+       sendF(msg)
   }
 
 
@@ -105,7 +106,8 @@ class SimplePresenter (
 
 
   def onJoin(event: ActionEvent): Unit = {
-            i send(clientActor, Connect(ip.text.value+":"+port.text.value, name.text.value, clientActor))
+      displayName = name.text.value
+      i send(clientActor, Connect(ip.text.value+":"+port.text.value, displayName, clientActor))
   }
 
 

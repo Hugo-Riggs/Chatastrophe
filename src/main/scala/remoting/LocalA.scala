@@ -29,7 +29,7 @@ object LocalA {
   var logReceived = ""
   var ourLastMessage = ""
 
-  def prepString(s: String): String = (s.trim) + "\n"
+  def prepString(s: String): String = s.trim + "\n"
 
   def props: Props = Props(new LocalA)
 }
@@ -43,9 +43,7 @@ class LocalA extends Actor {
 
   def receive = {
     case Connect(addressPort, withName, self) if server.isEmpty =>
-      //ourName=withName
-      server = 
-        List(context.actorSelection(remoteActorSysStr+addressPort+remoteActorRefStr))
+      server = List(context.actorSelection(remoteActorSysStr+addressPort+remoteActorRefStr))
       server.head ! Connect(addressPort, withName, self)
 
     case SendMessage(s) =>

@@ -49,7 +49,7 @@ object RemoteA {
   implicit val timeout = Timeout(5 seconds)
 
   // A map of connected clients
-  var connections = Map.empty[String, ActorRef] // TODO: can this be a val not var??
+  var connections = Map.empty[String, ActorRef]
 
   def props = Props(new RemoteA)
 }
@@ -76,7 +76,7 @@ class RemoteA extends Actor {
               actorRef ! PoisonPill
             case None =>
               connections += user -> actorRef  // add user to list of connected
-              actorRef ! ReceiveMessage( "============================================\n\\ Hello " + user + " welcome to a Chatastrophe chat \\ \n ============================================\n")
+              actorRef ! ReceiveMessage( "Hello " + user + " welcome to Chatastrophe.")
               val f = (logActor ? ReadFromLog).mapTo[String]
               val p = Promise[String]()
               p completeWith f
@@ -116,7 +116,7 @@ class RemoteA extends Actor {
             actorRef ! ReceiveMessage(text)
         }
 
-      case Poll => {  // Send chat log to single client.
+      case Poll =>  // Send chat log to single client.
         val f = (logActor ? ReadFromLog).mapTo[String]
         val p = Promise[String]()
         p completeWith f
@@ -124,7 +124,6 @@ class RemoteA extends Actor {
           case s =>
             sender ! ReceiveMessage(s)
         }
-      }
 
       case GUI_Request =>
         logActor forward GUI_Request
