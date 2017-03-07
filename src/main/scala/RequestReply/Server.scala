@@ -25,12 +25,10 @@ class ServerActor extends Actor {
     case CommandFailed(_: Bind) => context stop self
 
     case c @ Connected(remote, local) =>
-      val handler = context.actorOf(Props[SimplisticHandler])
+      val handler = context.actorOf(Props[SimpleEchoHandler])
       val connection = sender()
       connection ! Register(handler)
 
-    case c @ Connect(remoteAddress, localAddress, options, timeout, pullMode) =>
-      println("connect?")
   }
 
 }

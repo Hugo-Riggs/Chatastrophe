@@ -14,8 +14,8 @@ object Client {
 
   private val simplisticHandler = system.actorOf(Props[SimplisticHandler], "handler")
 
-  def createClientConnection(remote: InetSocketAddress):Actor =
-    new Client(remote, simplisticHandler)
+  def createClientConnection(remote: InetSocketAddress):ActorRef =
+    system.actorOf(props(remote, simplisticHandler))
 }
 
 class Client(remote: InetSocketAddress, listener: ActorRef) extends Actor {
