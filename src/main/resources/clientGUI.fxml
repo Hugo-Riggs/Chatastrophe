@@ -9,7 +9,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<VBox alignment="TOP_LEFT" style="-fx-background-color: #555555;" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1" fx:controller="interface.gui.SimplePresenter">
+<VBox alignment="TOP_LEFT" style="-fx-background-color: #555555;" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.RuntimeGUI">
   <children>
       <HBox prefHeight="26.0">
          <children>

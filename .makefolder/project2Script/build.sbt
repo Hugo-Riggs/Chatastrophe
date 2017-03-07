@@ -26,5 +26,5 @@ lazy val clientCliPackage = project
     name := "chatastrophe-client",
     version := "0.0.1",
     connectInput in run := true,
-    mainClass in Compile := Some("interface.ClientWithCLI")
+    mainClass in Compile := Some("Chatastrophe.interface.ClientWithCLI")
   )

@@ -26,5 +26,5 @@ lazy val serverPackage = project
     name := "chatastrophe-server",
     version := "0.0.1",
     connectInput in run := true,
-    mainClass in Compile := Some("interface.ServerCLI")
+    mainClass in Compile := Some("Chatastrophe.interface.ServerCLI")
   )
