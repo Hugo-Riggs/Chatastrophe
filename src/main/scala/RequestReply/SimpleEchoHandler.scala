@@ -20,6 +20,7 @@ class SimpleEchoHandler(connection: ActorRef, remote: InetSocketAddress)
 
   def receive = {
     case Received(data) =>
+      println("data received " + data.decodeString("UTF-8"))
       buffer(data)
       connection ! Write(data, Ack)
 
