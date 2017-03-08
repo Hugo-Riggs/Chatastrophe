@@ -25,4 +25,4 @@ branches:
 # safelist
 branches:
   only:
-  -refactoring
+  - refactoring
