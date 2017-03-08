@@ -34,22 +34,27 @@ class ServerTest extends FunSuite {
 
 
   test("host server"){
-    println("Starting server...")
-    val serverReference: ActorRef = ChatServer.actor
-    println("Server up for 1 minute")
+    try{
+      println("Starting server...")
+      val serverReference: ActorRef = ChatServer.actor
+      println("Server up for 30 seconds")
 
-    import concurrent.ExecutionContext.Implicits.global
-    val fut = Future {
-      Thread.sleep(1000 * 60)
+      import concurrent.ExecutionContext.Implicits.global
+      val fut = Future {
+        Thread.sleep(1000 * 30)
+      }
+
+      val x = Await.result(fut, 1.minute)
+
+      fut.onComplete(U =>
+        serverReference ! Shutdown
+      )
+
+      println("Server offline..")
+    } catch {
+      case e: Exception => println(e)
     }
 
-    val x = Await.result(fut, 1.minute)
-
-    fut.onComplete(U =>
-      serverReference ! Shutdown
-    )
-
-    println("Server offline..")
   }
 
 }
