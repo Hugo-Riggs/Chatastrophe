@@ -1,28 +1,38 @@
-package RequestReply
+/***
+  * Handler can send messages to server
+  * but server cannot send messages to handler...
+  */
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-import akka.io.{IO, Tcp}
-import akka.util.ByteString
+
+package Chatastrophe.Actors.server
+
 import java.net.InetSocketAddress
 
+import akka.actor.{Actor, ActorLogging, ActorRef}
+import akka.io.Tcp
+import akka.util.ByteString
 
 
 
-class SimpleEchoHandler(connection: ActorRef, remote: InetSocketAddress)
+class ChatHandler(connection: ActorRef, remote: InetSocketAddress, server: ActorRef)
   extends Actor with ActorLogging {
 
   import Tcp._
+  import ChatServer.connections
 
   // sign death pact: this actor terminates when connection breaks
   context watch connection
 
   case object Ack extends Event
 
+  connections += remote -> connection
+
   def receive = {
-    case Received(data) =>
-      println("data received " + data.decodeString("UTF-8"))
-      buffer(data)
-      connection ! Write(data, Ack)
+    case Received(data) =>                          // If the client's handler receives a message from the client
+      //println("Handler received " + data.decodeString("UTF-8"))
+      buffer(data)                                  // Buffer the message, in the handler
+      //connection ! Write(data, Ack)               // To the client, send this
+      connections.values.foreach( connection => connection ! Write(data, Ack) )
 
       context.become({
         case Received(data) => buffer(data)
@@ -31,6 +41,7 @@ class SimpleEchoHandler(connection: ActorRef, remote: InetSocketAddress)
       }, discardOld = false)
 
     case PeerClosed => context stop self
+
   }
 
   // storage omitted ...
@@ -77,5 +88,8 @@ class SimpleEchoHandler(connection: ActorRef, remote: InetSocketAddress)
       else context.unbecome()
     } else connection ! Write(storage(0), Ack)
   }
-}
 
+  private def broadcast(data: ByteString) = {
+
+  }
+}

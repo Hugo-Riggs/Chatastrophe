@@ -23,7 +23,7 @@ lazy val clientGuiPackage = project
   .enablePlugins(JavaServerAppPackaging)
   .settings(commonSettings: _*)
   .settings(
-    name := "chatastrophe-client-with-gui",
+    name := "chatastrophe-client-with-Chatastrophe.gui",
     version := "0.0.1",
     connectInput in run := true,
     mainClass in Compile := Some("Chatastrophe.interface.ClientWithGUI")
