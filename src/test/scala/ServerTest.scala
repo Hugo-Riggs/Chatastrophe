@@ -24,15 +24,32 @@ import akka.actor.ActorRef
 import org.scalatest.FunSuite
 import Chatastrophe.Actors.server._
 
+import scala.concurrent.Future
+import scala.concurrent.duration._
+import scala.concurrent.Await
+
+
 class ServerTest extends FunSuite {
 
-  println("Starting server...")
-  private val serverReference: ActorRef  = ChatServer.actor
 
-  test("stop server"){
-    println("Hit enter to shutdown server.")
-    scala.io.StdIn.readLine()
-    serverReference ! Shutdown
+
+  test("host server"){
+    println("Starting server...")
+    val serverReference: ActorRef = ChatServer.actor
+    println("Server up for 1 minute")
+
+    import concurrent.ExecutionContext.Implicits.global
+    val fut = Future {
+      Thread.sleep(1000 * 60)
+    }
+
+    val x = Await.result(fut, 1.minute)
+
+    fut.onComplete(U =>
+      serverReference ! Shutdown
+    )
+
+    println("Server offline..")
   }
 
 }
