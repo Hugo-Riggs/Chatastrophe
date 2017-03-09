@@ -30,10 +30,10 @@ class ChatHandlerWithConnections(
 
   def receive = {
     case Received(data) =>                          // If the client's handler receives a message from the client
-      //println("Handler received " + data.decodeString("UTF-8"))
       buffer(data)                                  // Buffer the message, in the handler
-      //connection ! Write(data, Ack)               // To the client, send this
-      connections.values.foreach( connection => connection ! Write(data, Ack) )
+      connections.values.foreach(
+        c => if(this.connection != c)
+          c ! Write(data, Ack) )
 
       context.become({
         case Received(data) => buffer(data)

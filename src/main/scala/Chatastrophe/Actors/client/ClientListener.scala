@@ -16,7 +16,7 @@ class ClientListener extends Actor {
 
   def receive = {
     case data: akka.util.ByteString =>  // A chat response from server
-      println("our handler informed us of: " + data.decodeString("UTF-8"))
+      println(data.decodeString("UTF-8"))
     case Received(data) =>              // Not sure when or if this ever gets called...
       sender() ! Write(data)
     case PeerClosed     => context stop self

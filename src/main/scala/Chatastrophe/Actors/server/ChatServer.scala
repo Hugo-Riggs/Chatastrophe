@@ -52,7 +52,7 @@ class ChatServer extends Actor with ActorLogging {
       val handler = context.actorOf(
         Props(
           new ChatHandlerWithConnections(connection, remote)
-        ) , name = "chatHandlerWithConnections")
+        ) )
       //  connections += remote -> handler // add handler to the connections
       connections += remote -> connection // add connection to the connections
       connection ! Register(handler)
