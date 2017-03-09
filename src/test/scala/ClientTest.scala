@@ -1,5 +1,3 @@
-package Chatastrophe.tests
-
 import java.net.InetSocketAddress
 import Chatastrophe.Actors.client.ChatClient
 import akka.util.ByteString

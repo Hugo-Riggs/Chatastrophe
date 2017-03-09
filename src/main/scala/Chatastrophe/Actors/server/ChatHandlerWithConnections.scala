@@ -13,19 +13,20 @@ import akka.io.Tcp
 import akka.util.ByteString
 
 
+class ChatHandlerWithConnections(
+    // Sender's actor reference
+    connection: ActorRef,
+    // Address from which the connection came in.
+    remote: InetSocketAddress
+  ) extends Actor with ActorLogging {
 
-class ChatHandler(connection: ActorRef, remote: InetSocketAddress, server: ActorRef)
-  extends Actor with ActorLogging {
-
-  import Tcp._
   import ChatServer.connections
+  import Tcp._
 
   // sign death pact: this actor terminates when connection breaks
   context watch connection
 
   case object Ack extends Event
-
-  connections += remote -> connection
 
   def receive = {
     case Received(data) =>                          // If the client's handler receives a message from the client

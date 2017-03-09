@@ -1,5 +1,7 @@
 /***
-* We need server client tests.
+* A class for hosting the server for a time period.
+* The server is an akka actor, it implements
+* logging.
 */
 
 /*
@@ -17,13 +19,10 @@ class ChatastropheSpec extends FlatSpec with Matchers {
 }
 */
 
-package Chatastrophe.tests
-
 import Chatastrophe.Actors.server.ChatServer
 import akka.actor.ActorRef
 import org.scalatest.FunSuite
 import Chatastrophe.Actors.server._
-
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.concurrent.Await
@@ -35,26 +34,19 @@ class ServerTest extends FunSuite {
 
   test("host server"){
     try{
-      println("Starting server...")
-      val serverReference: ActorRef = ChatServer.actor
-      println("Server up for 30 seconds")
-
+      val server: ActorRef = ChatServer.actor
       import concurrent.ExecutionContext.Implicits.global
       val fut = Future {
-        Thread.sleep(1000 * 30)
+        (println("Server will shutdown in 30 seconds"),Thread.sleep(1000 * 30))
       }
-
       val x = Await.result(fut, 1.minute)
-
       fut.onComplete(U =>
-        serverReference ! Shutdown
+        (server ! Shutdown,
+          println("Server offline.."))
       )
-
-      println("Server offline..")
     } catch {
       case e: Exception => println(e)
     }
-
   }
 
 }

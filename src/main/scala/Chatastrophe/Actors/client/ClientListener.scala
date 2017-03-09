@@ -20,6 +20,7 @@ class ClientListener extends Actor {
     case Received(data) =>              // Not sure when or if this ever gets called...
       sender() ! Write(data)
     case PeerClosed     => context stop self
+    case strResp: String => println(strResp)
   }
 
 }

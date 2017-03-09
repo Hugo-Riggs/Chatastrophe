@@ -27,8 +27,6 @@ class ChatClient(chatSockAdd: InetSocketAddress, listener: ActorRef)
 
   IO(Tcp) ! Connect(chatSockAdd)
 
-  println("client created with listener " + listener)
-
   def receive = {
     case CommandFailed(_: Connect) =>
       listener ! "connect failed"
