@@ -10,8 +10,7 @@ import java.net.InetSocketAddress
 
 import akka.actor.{Actor, ActorLogging, ActorRef}
 import akka.io.Tcp
-import akka.util.ByteString
-
+import akka.util.{ByteString}
 
 class ChatHandlerWithConnections(
     // Sender's actor reference
@@ -29,11 +28,8 @@ class ChatHandlerWithConnections(
   case object Ack extends Event
 
   def receive = {
-    case Received(data) =>                          // If the client's handler receives a message from the client
-      buffer(data)                                  // Buffer the message, in the handler
-      connections.values.foreach(
-        c => if(this.connection != c)
-          c ! Write(data, Ack) )
+    case Received(data) =>  // If the client's handler receives a message from the client
+      broadcast(data)       // User's message gets broadcast to others
 
       context.become({
         case Received(data) => buffer(data)
@@ -41,11 +37,12 @@ class ChatHandlerWithConnections(
         case PeerClosed     => closing = true
       }, discardOld = false)
 
-    case PeerClosed => context stop self
+    case PeerClosed =>
+      connections-=remote // Remove us from the connections record,
+      context stop self   // and stop this handler actor.
 
   }
 
-  // storage omitted ...
   private var suspended = false
   private var closing = false
   private var transferred = 0
@@ -91,6 +88,10 @@ class ChatHandlerWithConnections(
   }
 
   private def broadcast(data: ByteString) = {
-
+      buffer(data)                                  // Buffer the message, in the handler
+      connections.values.foreach(
+        c => if(this.connection != c)
+          c ! Write(data, Ack) )
   }
+
 }

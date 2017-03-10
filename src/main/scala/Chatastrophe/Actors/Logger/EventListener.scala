@@ -9,7 +9,7 @@ import akka.event.Logging.InitializeLogger
 import akka.event.Logging.LoggerInitialized
 import akka.event.Logging.Warning
 
-class MyEventListener extends Actor {
+class EventListener extends Actor {
   def receive = {
     case InitializeLogger(_)                        => sender() ! LoggerInitialized
     case Error(cause, logSource, logClass, message) => // ...

@@ -4,11 +4,18 @@ import java.net.InetSocketAddress
 
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
 import akka.io.{IO, Tcp}
+import com.typesafe.config.ConfigFactory
+
+import scala.language.postfixOps
 
 case object Shutdown
 
 object ChatServer {
-  val system = ActorSystem("ChatastropheServer")
+
+  val config = ConfigFactory.load()
+  val system = ActorSystem("Client", config.getConfig("serverApp"))
+
+  //val system = ActorSystem("ChatastropheServer")
   val actor = system.actorOf(Props[ChatServer])
   val connections = collection.mutable.Map[InetSocketAddress, ActorRef]()
 }
@@ -18,7 +25,7 @@ class ChatServer extends Actor with ActorLogging {
 
   import Tcp._
   import context.system
-  import ChatServer.connections
+  import ChatServer.connections   // Import this record, so we can add and subtract new connections.
 
   private var socketActor: Option[ActorRef] = None
 
@@ -45,24 +52,17 @@ class ChatServer extends Actor with ActorLogging {
 
     case c @ Connected(remote, local) =>
       val connection = sender()
-      log.info(remote + " remote connection\nloading " + server + " reference into their handler")
-      // Maybe substitute `server` for `connections` and would connections update
-      // in the handler if it is updated by the server actor?
-      // val handler = context.actorOf(Props(new ChatHandler(connection, remote, server)), name = "chatHandler")
-      val handler = context.actorOf(
-        Props(
-          new ChatHandlerWithConnections(connection, remote)
-        ) )
-      //  connections += remote -> handler // add handler to the connections
-      connections += remote -> connection // add connection to the connections
-      connection ! Register(handler)
+        log.info(remote + " remote connection.")
+        val handler = context.actorOf(
+          Props( new ChatHandlerWithConnections(connection, remote) ) )
+        connections += remote -> connection // add connection to the connections
+        connection ! Register(handler)
 
     case Shutdown =>
       socketActor.foreach(_ ! Unbind)
-      IO(Tcp) ! Unbind
       ChatServer.connections.clear()
       context.stop(self)
 
-    case x => log.warning("Received unkown message: {}", x)
+    case x => log.warning("Received unknown message: {}", x)
   }
 }
