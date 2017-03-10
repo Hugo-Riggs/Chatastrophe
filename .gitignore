@@ -2,5 +2,3 @@ target/
 .idea/
 *.swp
 project/project/
-src/main/java/
-src/main/resources/
