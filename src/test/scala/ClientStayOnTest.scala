@@ -16,7 +16,7 @@ class ClientStayOnTest extends FunSuite {
       def shouldContinue(str: String) = str!="close"
       var str = ""
       while(shouldContinue(str)) {
-        str = scala.io.StdIn.readLine()   // display username: message
+        str = scala.io.StdIn.readLine()
         if(str == "close") {
           client ! "close"
         } else

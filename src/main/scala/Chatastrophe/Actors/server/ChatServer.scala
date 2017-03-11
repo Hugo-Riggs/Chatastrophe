@@ -18,6 +18,26 @@ object ChatServer {
   //val system = ActorSystem("ChatastropheServer")
   val actor = system.actorOf(Props[ChatServer])
   val connections = collection.mutable.Map[InetSocketAddress, ActorRef]()
+
+
+
+  // helpful function from stack overflow
+  def getIpAddress: String = {
+    import collection.JavaConverters._
+    import java.net._
+    val enumeration = NetworkInterface.getNetworkInterfaces.asScala.toSeq
+
+    val ipAddresses = enumeration.flatMap(p =>
+      p.getInetAddresses.asScala.toSeq
+    )
+
+    val address = ipAddresses.find { address =>
+      val host = address.getHostAddress
+      host.contains(".") && !address.isLoopbackAddress
+    }.getOrElse(InetAddress.getLocalHost)
+
+    address.getHostAddress
+  }
 }
 
 
@@ -39,7 +59,8 @@ class ChatServer extends Actor with ActorLogging {
   }
 
   private val server = self
-  private val ip = java.net.InetAddress.getLocalHost
+  //  private val ip = java.net.InetAddress.getLocalHost
+  private val ip  = ChatServer.getIpAddress
   private val port = 6666
   IO(Tcp) ! Bind(server, new InetSocketAddress(ip, port))
 
