@@ -21,7 +21,7 @@ object SimpleInterface extends App {
       if(str == "close") {
         client ! "close"
       } else
-        client ! ByteString(str)                  // send    username: message
+        client ! ByteString(str)
     }
   }
 
