@@ -12,7 +12,6 @@ object ChatClient {
   val config = ConfigFactory.load()
   val system = ActorSystem("Client", config.getConfig("clientApp"))
 
-
   private def listener(username: String) = system.actorOf(Props(classOf[ClientListener], username), "listener")
 
   // An abstract constructor function

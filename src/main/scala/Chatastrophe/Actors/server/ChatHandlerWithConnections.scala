@@ -32,7 +32,8 @@ class ChatHandlerWithConnections(
       context.become({
         case Received(data) => buffer(data)
         case Ack            => acknowledge()
-        case PeerClosed     => closing = true
+        case PeerClosed     =>
+          closing = true
       }, discardOld = false)
 
     case PeerClosed =>
@@ -40,8 +41,10 @@ class ChatHandlerWithConnections(
       context stop self   // and stop this handler actor.
 
     case UpdatePeers(connections)  =>
+      log.info("updating connections in handler=" +self.path+ " to " + connections.mkString("\n"))
       this.connections.clear()
       this.connections++=connections
+      this.connection ! Write(ByteString("Your connections got updated to " + connections.mkString("\n"))) // comment out
   }
 
   private var suspended = false

@@ -1,7 +1,8 @@
 package Chatastrophe.Actors.server
 
 import java.net.InetSocketAddress
-import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
+
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props, Terminated}
 import akka.io.{IO, Tcp}
 import com.typesafe.config.ConfigFactory
 
@@ -11,17 +12,9 @@ case class UpdatePeers(connections: collection.mutable.Map[InetSocketAddress, Ac
 case object Shutdown
 
 object ChatServer {
-
   val config = ConfigFactory.load()
   val system = ActorSystem("ChatastropheServer", config.getConfig("serverApp"))
-
   val actor = system.actorOf(Props[ChatServer])
-
-  // ip:port , connection_actoRef
-  val connections = collection.mutable.Map[InetSocketAddress, ActorRef]()
-
-  // ip:port , handler_actoRef
-  val handlers = collection.mutable.Map[InetSocketAddress, ActorRef]()
 
   // helpful function from stack overflow
   def getIpAddress: String = {
@@ -47,8 +40,9 @@ class ChatServer extends Actor with ActorLogging {
 
   import Tcp._
   import context.system
-  import ChatServer.{connections, handlers}   // Import this record, so we can add and subtract new connections.
 
+  val handlers = collection.mutable.Map[InetSocketAddress, ActorRef]()
+  val connections = collection.mutable.Map[InetSocketAddress, ActorRef]()
   private var socketActor: Option[ActorRef] = None
 
   override def preStart() = {
@@ -74,24 +68,42 @@ class ChatServer extends Actor with ActorLogging {
     case CommandFailed(_: Bind) => context stop self
 
     case c @ Connected(remote, local) =>
+      // Standard stuff
       val connection = sender()
-        log.info(remote + " remote connection.")
-        val handler = context.actorOf(
-          Props( new ChatHandlerWithConnections(connection, remote) ) )
-        connections += remote -> connection // add connection to the connections
-        handlers += remote -> handler // add the handler for the server's future reference
-
-        // Let other peers know of the new connection + load our peers
-        val it = handlers.values.toIterator
-        while(it.nonEmpty){
-          it.next ! UpdatePeers(connections)
-        }
-        connection ! Register(handler)
+      log.info(remote + " remote connection.")
+      val handler = context.actorOf(
+        Props( new ChatHandlerWithConnections(connection, remote) ) )
+      connection ! Register(handler)
+      // Chatastrophe stuff
+      context.watch(handler)
+      connections += remote -> connection // add connection to the connections
+      handlers += remote -> handler // add the handler for the server's future reference
+      // Let other peers know of the new connection + load our peers
+      val it = handlers.values.toIterator
+      var counter = 0
+      while(it.nonEmpty){
+        counter += 1
+        val next = it.next
+        log.info("selecting actor at " + next.path)
+        context.actorSelection(next.path) ! UpdatePeers(connections)
+      }
+      log.info("sent out " + counter + " updates for peers")
 
     case Shutdown =>
       socketActor.foreach(_ ! Unbind)
-      ChatServer.connections.clear()
+      connections.clear()
       context.stop(self)
+
+    case Terminated(handler) =>
+      log.info("Terminated " + handler + "... removing them from record")
+      val it = handlers.toIterator
+      while(it.hasNext) {
+        val next = it.next
+        if(next._2==handler){
+          connections-=next._1
+          handlers-=next._1
+        }
+      }
 
     case x => log.warning("Received unknown message: {}", x)
   }
