@@ -3,11 +3,9 @@
   * but server cannot send messages to handler...
   */
 
-
 package Chatastrophe.Actors.server
 
 import java.net.InetSocketAddress
-
 import akka.actor.{Actor, ActorLogging, ActorRef}
 import akka.io.Tcp
 import akka.util.{ByteString}
@@ -19,8 +17,8 @@ class ChatHandlerWithConnections(
     remote: InetSocketAddress
   ) extends Actor with ActorLogging {
 
-  import ChatServer.connections
   import Tcp._
+  val connections = collection.mutable.Map[InetSocketAddress, ActorRef]()
 
   // sign death pact: this actor terminates when connection breaks
   context watch connection
@@ -41,15 +39,18 @@ class ChatHandlerWithConnections(
       connections-=remote // Remove us from the connections record,
       context stop self   // and stop this handler actor.
 
+    case UpdatePeers(connections)  =>
+      this.connections.clear()
+      this.connections++=connections
   }
 
   private var suspended = false
   private var closing = false
   private var transferred = 0
-  private val lowWatermark = 10
-  private val highWatermark = 100
+  private val lowWatermark = 15
+  private val highWatermark = 150
   private var stored = 0
-  private val maxStored = 200
+  private val maxStored = 250
   private var storage = collection.mutable.ArrayBuffer[ByteString]()
 
   private def buffer(data: ByteString): Unit = {

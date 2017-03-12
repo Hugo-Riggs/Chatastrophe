@@ -1,12 +1,12 @@
-scalaVersion := "2.11.1"
+scalaVersion := "2.11.8"
 
 lazy val commonSettings = Seq(
   libraryDependencies ++= {
-      Seq(
-        "com.typesafe.akka" %% "akka-actor" % "2.4.17",
-        "com.typesafe.akka" %% "akka-remote" % "2.4.17",
-        "org.scala-lang" % "scala-library" % scalaVersion.value,
-        "org.scalatest" %% "scalatest" % "3.0.0" % "test"
+    Seq(
+      "com.typesafe.akka" %% "akka-actor" % "2.4.17",
+      "com.typesafe.akka" %% "akka-remote" % "2.4.17",
+      "org.scala-lang" % "scala-library" % scalaVersion.value,
+      "org.scalatest" %% "scalatest" % "3.0.0" % "test"
     )
   }
 )
@@ -23,3 +23,14 @@ lazy val serverPackage = project
     assemblyJarName in assembly := "daemon.jar"
   )
 
+
+lazy val clientPackage = project
+  .in(file("."))
+  .enablePlugins(JavaServerAppPackaging)
+  .settings(commonSettings: _*)
+  .settings(
+    name := "chatastrophe-client",
+    version := "0.0.1",
+    test in assembly := {},
+    mainClass in assembly := Some("Chatastrophe.Actors.client.simpleInterface.SimpleInterface")
+  )

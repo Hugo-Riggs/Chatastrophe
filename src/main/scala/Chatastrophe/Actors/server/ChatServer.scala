@@ -1,25 +1,27 @@
 package Chatastrophe.Actors.server
 
 import java.net.InetSocketAddress
-
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
 import akka.io.{IO, Tcp}
 import com.typesafe.config.ConfigFactory
 
 import scala.language.postfixOps
 
+case class UpdatePeers(connections: collection.mutable.Map[InetSocketAddress, ActorRef])
 case object Shutdown
 
 object ChatServer {
 
   val config = ConfigFactory.load()
-  val system = ActorSystem("Client", config.getConfig("serverApp"))
+  val system = ActorSystem("ChatastropheServer", config.getConfig("serverApp"))
 
-  //val system = ActorSystem("ChatastropheServer")
   val actor = system.actorOf(Props[ChatServer])
+
+  // ip:port , connection_actoRef
   val connections = collection.mutable.Map[InetSocketAddress, ActorRef]()
 
-
+  // ip:port , handler_actoRef
+  val handlers = collection.mutable.Map[InetSocketAddress, ActorRef]()
 
   // helpful function from stack overflow
   def getIpAddress: String = {
@@ -45,7 +47,7 @@ class ChatServer extends Actor with ActorLogging {
 
   import Tcp._
   import context.system
-  import ChatServer.connections   // Import this record, so we can add and subtract new connections.
+  import ChatServer.{connections, handlers}   // Import this record, so we can add and subtract new connections.
 
   private var socketActor: Option[ActorRef] = None
 
@@ -77,6 +79,17 @@ class ChatServer extends Actor with ActorLogging {
         val handler = context.actorOf(
           Props( new ChatHandlerWithConnections(connection, remote) ) )
         connections += remote -> connection // add connection to the connections
+        handlers += remote -> handler
+
+        // Let other peers know of the new connection + load our peers
+        val it = handlers.values.toIterator
+        while(it.nonEmpty){
+          it.next ! UpdatePeers
+        }
+     //   handlers.values.foreach(
+     //     handler ! UpdatePeers(connections)
+     //   )
+
         connection ! Register(handler)
 
     case Shutdown =>
