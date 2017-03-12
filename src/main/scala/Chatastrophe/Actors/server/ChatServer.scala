@@ -79,17 +79,13 @@ class ChatServer extends Actor with ActorLogging {
         val handler = context.actorOf(
           Props( new ChatHandlerWithConnections(connection, remote) ) )
         connections += remote -> connection // add connection to the connections
-        handlers += remote -> handler
+        handlers += remote -> handler // add the handler for the server's future reference
 
         // Let other peers know of the new connection + load our peers
         val it = handlers.values.toIterator
         while(it.nonEmpty){
-          it.next ! UpdatePeers
+          it.next ! UpdatePeers(connections)
         }
-     //   handlers.values.foreach(
-     //     handler ! UpdatePeers(connections)
-     //   )
-
         connection ! Register(handler)
 
     case Shutdown =>

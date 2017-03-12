@@ -23,14 +23,14 @@ lazy val serverPackage = project
     assemblyJarName in assembly := "daemon.jar"
   )
 
-
-lazy val clientPackage = project
-  .in(file("."))
-  .enablePlugins(JavaServerAppPackaging)
-  .settings(commonSettings: _*)
-  .settings(
-    name := "chatastrophe-client",
-    version := "0.0.1",
-    test in assembly := {},
-    mainClass in assembly := Some("Chatastrophe.Actors.client.simpleInterface.SimpleInterface")
-  )
+/// Comment out to compile daemon, uncomment to compile client
+//lazy val clientPackage = project
+//  .in(file("."))
+//  .enablePlugins(JavaServerAppPackaging)
+//  .settings(commonSettings: _*)
+//  .settings(
+//    name := "chatastrophe-client",
+//    version := "0.0.1",
+//    test in assembly := {},
+//    mainClass in assembly := Some("Chatastrophe.Actors.client.simpleInterface.SimpleInterface")
+//  )
