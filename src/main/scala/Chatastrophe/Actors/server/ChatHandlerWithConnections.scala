@@ -29,12 +29,17 @@ class ChatHandlerWithConnections(
     case Received(data) =>  // If the client's handler receives a message from the client
       broadcast(data)       // User's message gets broadcast to others
 
-      context.become({
-        case Received(data) => buffer(data)
-        case Ack            => acknowledge()
-        case PeerClosed     =>
-          closing = true
-      }, discardOld = false)
+//      context.become({
+//        case Received(data) => buffer(data)
+//        case Ack            => acknowledge()
+//        case PeerClosed     =>
+//          closing = true
+//        case UpdatePeers(connections)  =>
+//          log.info("updating connections in handler=" +self.path+ " to " + connections.mkString("\n"))
+//          this.connections.clear()
+//          this.connections++=connections
+//          this.connection ! Write(ByteString("Your connections got updated to " + connections.mkString("\n")))
+//      }, discardOld = false)
 
     case PeerClosed =>
       connections-=remote // Remove us from the connections record,

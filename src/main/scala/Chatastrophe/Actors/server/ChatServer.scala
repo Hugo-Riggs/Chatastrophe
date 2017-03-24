@@ -68,13 +68,12 @@ class ChatServer extends Actor with ActorLogging {
     case CommandFailed(_: Bind) => context stop self
 
     case c @ Connected(remote, local) =>
-      // Standard stuff
       val connection = sender()
       log.info(remote + " remote connection.")
       val handler = context.actorOf(
         Props( new ChatHandlerWithConnections(connection, remote) ) )
       connection ! Register(handler)
-      // Chatastrophe stuff
+      // Chat control update peers
       context.watch(handler)
       connections += remote -> connection // add connection to the connections
       handlers += remote -> handler // add the handler for the server's future reference
