@@ -1,8 +1,3 @@
-/***
-  * Handler can send messages to server
-  * but server cannot send messages to handler...
-  */
-
 package Chatastrophe.Actors.server
 
 import java.net.InetSocketAddress
@@ -11,10 +6,8 @@ import akka.io.Tcp
 import akka.util.{ByteString}
 
 class ChatHandlerWithConnections(
-    // Sender's actor reference
-    connection: ActorRef,
-    // Address from which the connection came in.
-    remote: InetSocketAddress
+    connection: ActorRef,      // Sender's actor reference
+    remote: InetSocketAddress  // Address from which the connection came in.
   ) extends Actor with ActorLogging {
 
   import Tcp._
@@ -29,27 +22,20 @@ class ChatHandlerWithConnections(
     case Received(data) =>  // If the client's handler receives a message from the client
       broadcast(data)       // User's message gets broadcast to others
 
-//      context.become({
-//        case Received(data) => buffer(data)
-//        case Ack            => acknowledge()
-//        case PeerClosed     =>
-//          closing = true
-//        case UpdatePeers(connections)  =>
-//          log.info("updating connections in handler=" +self.path+ " to " + connections.mkString("\n"))
-//          this.connections.clear()
-//          this.connections++=connections
-//          this.connection ! Write(ByteString("Your connections got updated to " + connections.mkString("\n")))
-//      }, discardOld = false)
+      context.become({
+        case Received(data) => buffer(data)
+        case Ack            => acknowledge()
+        case PeerClosed     =>
+          closing = true
+        case UpdatePeers(cncts)  => updatePeers(cncts)
+
+      }, discardOld = false)
 
     case PeerClosed =>
       connections-=remote // Remove us from the connections record,
       context stop self   // and stop this handler actor.
 
-    case UpdatePeers(connections)  =>
-      log.info("updating connections in handler=" +self.path+ " to " + connections.mkString("\n"))
-      this.connections.clear()
-      this.connections++=connections
-      this.connection ! Write(ByteString("Your connections got updated to " + connections.mkString("\n"))) // comment out
+    case UpdatePeers(cncts)  => updatePeers(cncts)
   }
 
   private var suspended = false
@@ -93,7 +79,7 @@ class ChatHandlerWithConnections(
     if (storage.isEmpty) {
       if (closing) context stop self
       else context.unbecome()
-    } else connection ! Write(storage(0), Ack)
+    } else broadcast(storage(0)) //connection ! Write(storage(0), Ack)
   }
 
   private def broadcast(data: ByteString) = {
@@ -101,6 +87,13 @@ class ChatHandlerWithConnections(
       connections.values.foreach(
         c => if(this.connection != c)
           c ! Write(data, Ack) )
+  }
+
+  private def updatePeers(connections : collection.mutable.Map[InetSocketAddress, ActorRef] ) ={
+          log.info("updating connections in handler=" +self.path+ " to " + connections.mkString("\n"))
+          this.connections.clear()
+          this.connections++=connections
+          //this.connection ! Write(ByteString("Your connections got updated to " + connections.mkString("\n")))
   }
 
 }

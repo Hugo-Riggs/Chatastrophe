@@ -25,7 +25,7 @@ class ClientListener(username: String) extends Actor {
   private val nameLength = (username+": ").length
   private val backspace = "\b"*nameLength
   private val  makeSomeRoom = "\n"*10
-  private val banner = " ██████╗██╗  ██╗ █████╗ ████████╗ █████╗ ███████╗████████╗██████╗  ██████╗ ██████╗ ██╗  ██╗███████╗\n██╔════╝██║  ██║██╔══██╗╚══██╔══╝██╔══██╗██╔════╝╚══██╔══╝██╔══██╗██╔═══██╗██╔══██╗██║  ██║██╔════╝\n██║     ███████║███████║   ██║   ███████║███████╗   ██║   ██████╔╝██║   ██║██████╔╝███████║█████╗  \n██║     ██╔══██║██╔══██║   ██║   ██╔══██║╚════██║   ██║   ██╔══██╗██║   ██║██╔═══╝ ██╔══██║██╔══╝  \n╚██████╗██║  ██║██║  ██║   ██║   ██║  ██║███████║   ██║   ██║  ██║╚██████╔╝██║     ██║  ██║███████╗\n ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝  ╚═╝╚══════╝"
+  private val banner = "< Chatastrophe >"
   print(makeSomeRoom)
   print(banner+makeSomeRoom)
   print("to disconnect type: close\n\n")
