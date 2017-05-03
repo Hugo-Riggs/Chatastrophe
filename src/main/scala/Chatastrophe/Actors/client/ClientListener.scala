@@ -24,20 +24,19 @@ class ClientListener(username: String) extends Actor {
   // Terminal based communication, text initialization
   private val nameLength = (username+": ").length
   private val backspace = "\b"*nameLength
-  private val  makeSomeRoom = "\n"*10
+  private val  verticalWhiteSpace = "\n"*20
   private val banner = "< Chatastrophe >"
-  print(makeSomeRoom)
-  print(banner+makeSomeRoom)
+  print(verticalWhiteSpace+banner+verticalWhiteSpace)
   print("to disconnect type: close\n\n")
   print(username+": ")
 
   def receive = {
-    case data: ByteString =>                // A chat response from server (dif. connected user)
+    case data: ByteString =>                    // A chat response from server (dif. connected user)
       print(backspace)  //  self ! RemoveName   // I guess, it doesn't call `RemoveName` but `PlaceNames` does work...
-      println(data.decodeString("UTF-8"))   // print message from remote
+      println(data.decodeString("UTF-8"))       // print message from remote
       self ! PlaceName
 
-    case Received(data) =>              // Not sure when or if this ever gets called...
+    case Received(data: ByteString) =>              // Not sure when or if this ever gets called...
       sender() ! Write(data)
 
     case PeerClosed     => context stop self

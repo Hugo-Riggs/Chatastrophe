@@ -4,9 +4,8 @@ import akka.actor.ActorRef;
 import org.apache.commons.daemon.Daemon;
 import org.apache.commons.daemon.DaemonContext;
 import org.apache.commons.daemon.DaemonInitException;
-
 import Chatastrophe.Actors.server.ChatServer;
-import Chatastrophe.Actors.server.Shutdown;
+import Chatastrophe.Protocol.Shutdown;
 
 public class DaemonInterface implements Daemon  {
 

@@ -14,9 +14,8 @@ object SimpleInterface extends App {
   val client = ChatClient.createClientConnection(username, inetSocketAddress)
 
   def inputLines() = {
-    def shouldContinue(str: String) = str!="close"
     var str = ""
-    while(shouldContinue(str)) {
+    while(str != "close") {
       str = scala.io.StdIn.readLine()
       if(str == "close") {
         client ! "close"

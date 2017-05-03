@@ -4,6 +4,7 @@ import java.net.InetSocketAddress
 import akka.actor.{Actor, ActorLogging, ActorRef}
 import akka.io.Tcp
 import akka.util.{ByteString}
+import Chatastrophe.Protocol._
 
 class ChatHandlerWithConnections(
     connection: ActorRef,      // Sender's actor reference
@@ -11,31 +12,37 @@ class ChatHandlerWithConnections(
   ) extends Actor with ActorLogging {
 
   import Tcp._
-  val connections = collection.mutable.Map[InetSocketAddress, ActorRef]()
 
-  // sign death pact: this actor terminates when connection breaks
-  context watch connection
+  context watch connection // sign death pact: this actor terminates when connection breaks
 
   case object Ack extends Event
+  private val connections = collection.mutable.Map[ InetSocketAddress, ActorRef]()
+  private var username = ByteString("???")
+  private val server = context.parent
 
   def receive = {
-    case Received(data) =>  // If the client's handler receives a message from the client
-      broadcast(data)       // User's message gets broadcast to others
-
+    case Received(data: ByteString) =>  // If the client's handler receives a message from the client
+      username = data
+      server ! UserName(username, remote)
       context.become({
-        case Received(data) => buffer(data)
-        case Ack            => acknowledge()
-        case PeerClosed     =>
-          closing = true
-        case UpdatePeers(cncts)  => updatePeers(cncts)
-
-      }, discardOld = false)
-
-    case PeerClosed =>
-      connections-=remote // Remove us from the connections record,
-      context stop self   // and stop this handler actor.
-
-    case UpdatePeers(cncts)  => updatePeers(cncts)
+        case Received(data) => broadcast(data)
+        context.become({
+          case Received(data) => buffer(data)
+          case Ack            => acknowledge()
+          case PeerClosed     => closing = true
+          case UpdatePeers(c)  => updatePeers(c)
+        }, discardOld = false)
+      case UpdatePeers(c)  => updatePeers(c)
+      case PeerClosed => context stop self
+      case RepeatedUsername =>
+        connection ! Write(ByteString("user already exists in channel"))
+        context stop self
+    })
+    case UpdatePeers(c)  => updatePeers(c)
+    case PeerClosed => context stop self
+    case RepeatedUsername =>
+      connection ! Write(ByteString("user already exists in channel"))
+      context stop self
   }
 
   private var suspended = false
@@ -52,11 +59,11 @@ class ChatHandlerWithConnections(
     stored += data.size
 
     if (stored > maxStored) {
-      log.warning(s"drop connection to [$remote] (buffer overrun)")
+      log.warning(s"\ndrop connection to [$remote] (buffer overrun)")
       context stop self
 
     } else if (stored > highWatermark) {
-      log.debug(s"suspending reading")
+      log.debug(s"\nsuspending reading")
       connection ! SuspendReading
       suspended = true
     }
@@ -72,7 +79,7 @@ class ChatHandlerWithConnections(
     storage = storage drop 1
 
     if (suspended && stored < lowWatermark) {
-      log.debug("resuming reading")
+      log.debug("\nresuming reading")
       connection ! ResumeReading
       suspended = false
     }
@@ -84,16 +91,18 @@ class ChatHandlerWithConnections(
 
   private def broadcast(data: ByteString) = {
       buffer(data)                                  // Buffer the message, in the handler
+      val userMessage = ByteString(username.decodeString("UTF-8")+": "+data.decodeString("UTF-8"))
+      log.info(userMessage.decodeString("UTF-8"))
       connections.values.foreach(
         c => if(this.connection != c)
-          c ! Write(data, Ack) )
+          c ! Write(userMessage, Ack) )
   }
 
   private def updatePeers(connections : collection.mutable.Map[InetSocketAddress, ActorRef] ) ={
-          log.info("updating connections in handler=" +self.path+ " to " + connections.mkString("\n"))
+          log.info("\nUpdating connections in "
+            + username.decodeString("UTF-8") + "'s handler to:\n" + connections.mkString("\n"))
           this.connections.clear()
           this.connections++=connections
-          //this.connection ! Write(ByteString("Your connections got updated to " + connections.mkString("\n")))
   }
 
 }
